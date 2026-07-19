@@ -262,37 +262,45 @@ git commit -m "feat: add classroom cloud masks"
 
 ---
 
-### Task 3: 완성 페이지 계약과 설정 상수
+### Task 3: 설정 상수와 기본값
 
 **Files:**
-- Modify: `tests/rendered-html.test.mjs`
+- Create: `tests/cloud-options.test.mjs`
 - Create: `app/lib/cloud-options.mjs`
 - Modify: `package.json`
-- Modify: `package-lock.json`
 
 **Interfaces:**
 - Produces: `MASK_OPTIONS`, `PALETTE_OPTIONS`, `FONT_OPTIONS`, `WORD_COUNT_OPTIONS`, `DEFAULT_SETTINGS`
 - Produces: `normalizeSettings(value) -> CloudSettings`
 
-- [ ] **Step 1: Replace starter assertions with failing product assertions**
+- [ ] **Step 1: Write failing option tests**
 
-The rendered HTML test must assert status 200 and these exact phrases:
+Create `tests/cloud-options.test.mjs`:
 
 ```js
-assert.match(html, /<title>클라우드 수업실/);
-assert.match(html, /학생들의 생각을 한눈에 모아보세요/);
-assert.match(html, /광고 없음/);
-assert.match(html, /서버 저장 없음/);
-assert.match(html, /워드 클라우드 만들기/);
-assert.match(html, /업데이트 내역/);
-assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);
+import assert from "node:assert/strict";
+import test from "node:test";
+import { DEFAULT_SETTINGS, MASK_OPTIONS, WORD_COUNT_OPTIONS, normalizeSettings } from "../app/lib/cloud-options.mjs";
+
+test("offers the approved masks and word counts with forty as default", () => {
+  assert.deepEqual(MASK_OPTIONS.map(({ id }) => id), ["circle", "bubble", "heart", "star", "book"]);
+  assert.deepEqual(WORD_COUNT_OPTIONS, [20, 40, 60, 80, 100]);
+  assert.equal(DEFAULT_SETTINGS.wordCount, 40);
+});
+
+test("normalizes unknown saved preferences to safe defaults", () => {
+  assert.deepEqual(normalizeSettings({ maskId: "unknown", paletteId: "warm", fontId: "clean", wordCount: 999 }), {
+    ...DEFAULT_SETTINGS,
+    paletteId: "warm",
+  });
+});
 ```
 
-- [ ] **Step 2: Run the current integration test and verify RED**
+- [ ] **Step 2: Run and verify RED**
 
-Run: `npm run build && node --test tests/rendered-html.test.mjs`
+Run: `node --test tests/cloud-options.test.mjs`
 
-Expected: FAIL because the starter title and skeleton are still rendered.
+Expected: FAIL with `ERR_MODULE_NOT_FOUND` for `app/lib/cloud-options.mjs`.
 
 - [ ] **Step 3: Add exact option constants and defaults**
 
@@ -323,28 +331,28 @@ export const DEFAULT_SETTINGS = { maskId: "bubble", paletteId: "clear", fontId: 
 
 Add `normalizeSettings` so unknown values fall back to `DEFAULT_SETTINGS` and only the four settings are returned.
 
-- [ ] **Step 4: Remove the starter-only dependency**
-
-Run: `npm uninstall react-loading-skeleton`
-
-Expected: `react-loading-skeleton` is removed from `package.json` and `package-lock.json`.
-
-- [ ] **Step 5: Add unit tests to the test script**
+- [ ] **Step 4: Add all green unit tests to the test script**
 
 Set `package.json` scripts to:
 
 ```json
 {
-  "test:unit": "node --test tests/word-analysis.test.mjs tests/masks-layout.test.mjs",
+  "test:unit": "node --test tests/word-analysis.test.mjs tests/masks-layout.test.mjs tests/cloud-options.test.mjs",
   "test": "npm run test:unit && npm run build && node --test tests/rendered-html.test.mjs"
 }
 ```
 
-- [ ] **Step 6: Commit the product contract**
+- [ ] **Step 5: Run the unit suite and verify GREEN**
+
+Run: `npm run test:unit`
+
+Expected: 8 tests pass, 0 fail.
+
+- [ ] **Step 6: Commit the settings slice**
 
 ```bash
-git add tests/rendered-html.test.mjs app/lib/cloud-options.mjs package.json package-lock.json
-git commit -m "test: define word cloud product contract"
+git add tests/cloud-options.test.mjs app/lib/cloud-options.mjs package.json
+git commit -m "feat: define classroom cloud options"
 ```
 
 ---
@@ -353,6 +361,7 @@ git commit -m "test: define word cloud product contract"
 
 **Files:**
 - Create: `app/components/CloudCanvas.tsx`
+- Create: `tests/cloud-canvas-contract.test.mjs`
 
 **Interfaces:**
 - Consumes: `{ result, settings, onDownloadError }`
@@ -360,7 +369,7 @@ git commit -m "test: define word cloud product contract"
 
 - [ ] **Step 1: Add a renderer contract test**
 
-Extend `tests/rendered-html.test.mjs` source checks to read `CloudCanvas.tsx` and assert:
+Create `tests/cloud-canvas-contract.test.mjs` to read `CloudCanvas.tsx` and assert:
 
 ```js
 assert.match(canvasSource, /width={1200}/);
@@ -372,7 +381,7 @@ assert.match(canvasSource, /aria-label="워드 클라우드 미리보기"/);
 
 - [ ] **Step 2: Run and verify RED**
 
-Run: `npm run build && node --test tests/rendered-html.test.mjs`
+Run: `node --test tests/cloud-canvas-contract.test.mjs`
 
 Expected: FAIL because `CloudCanvas.tsx` does not exist.
 
@@ -382,16 +391,16 @@ Expected: FAIL because `CloudCanvas.tsx` does not exist.
 
 When there is no result, draw a calm example cloud and show `텍스트를 붙여넣으면 여기에 결과가 나타나요.` as adjacent accessible text. Show `표시된 단어 N개 · 공간 부족으로 생략 M개` below a generated result.
 
-- [ ] **Step 4: Build and verify the renderer contract**
+- [ ] **Step 4: Verify the renderer contract is GREEN**
 
-Run: `npm run build && node --test tests/rendered-html.test.mjs`
+Run: `node --test tests/cloud-canvas-contract.test.mjs`
 
-Expected: renderer source assertions pass; page product assertions remain red until Task 5.
+Expected: 1 test passes, 0 fail.
 
 - [ ] **Step 5: Commit the renderer**
 
 ```bash
-git add app/components/CloudCanvas.tsx tests/rendered-html.test.mjs
+git add app/components/CloudCanvas.tsx tests/cloud-canvas-contract.test.mjs
 git commit -m "feat: render downloadable word clouds"
 ```
 
@@ -408,6 +417,9 @@ git commit -m "feat: render downloadable word clouds"
 - Modify: `app/page.tsx`
 - Modify: `app/layout.tsx`
 - Modify: `app/globals.css`
+- Modify: `tests/rendered-html.test.mjs`
+- Modify: `package.json`
+- Modify: `package-lock.json`
 - Delete: `app/_sites-preview/SkeletonPreview.tsx`
 - Delete: `app/_sites-preview/preview.css`
 
@@ -418,9 +430,9 @@ git commit -m "feat: render downloadable word clouds"
 - `InfoDialog({ type, onClose })`
 - `WordCloudStudio()` owns all state and local preference persistence
 
-- [ ] **Step 1: Add source and rendered accessibility assertions**
+- [ ] **Step 1: Replace starter assertions with failing product and accessibility assertions**
 
-Extend `tests/rendered-html.test.mjs` to verify source contains all five mask labels, all five word-count values, `aria-pressed`, `aria-live`, `dialog`, the three example labels, the dated update entry, and `localStorage.setItem("cloud-classroom-settings"`. Assert the source never stores the variables named `text`, `excluded`, `keywords`, or `result` in localStorage.
+The rendered HTML test must assert status 200 and the exact phrases `클라우드 수업실`, `학생들의 생각을 한눈에 모아보세요`, `광고 없음`, `서버 저장 없음`, `워드 클라우드 만들기`, and `업데이트 내역`. It must reject `codex-preview`, `react-loading-skeleton`, and `Your site is taking shape`. Source checks must verify all five mask labels, all five word-count values, `aria-pressed`, `aria-live`, `dialog`, the three example labels, the dated update entry, and `localStorage.setItem("cloud-classroom-settings"`. Assert the source never stores the variables named `text`, `excluded`, `keywords`, or `result` in localStorage.
 
 - [ ] **Step 2: Run and verify RED**
 
@@ -460,13 +472,19 @@ export const EXAMPLES = {
 
 Use CSS custom properties for the blue visual direction (`#2357c6`, `#f4f8ff`, `#14294d`) and warm accent (`#f06d55`). At 900px and above, keep the preview large with controls surrounding it; below 900px use the order `preview → settings → input → frequency`. Include `:focus-visible`, `prefers-reduced-motion`, 44px minimum touch targets, and no horizontal overflow.
 
-- [ ] **Step 7: Run full tests and verify GREEN**
+- [ ] **Step 7: Remove the starter-only dependency**
+
+Run: `npm uninstall react-loading-skeleton`
+
+Expected: `react-loading-skeleton` is removed from `package.json` and `package-lock.json`.
+
+- [ ] **Step 8: Run full tests and verify GREEN**
 
 Run: `npm test`
 
 Expected: all unit and rendered HTML tests pass and build exits 0.
 
-- [ ] **Step 8: Commit the complete classroom UI**
+- [ ] **Step 9: Commit the complete classroom UI**
 
 ```bash
 git add app tests package.json package-lock.json
