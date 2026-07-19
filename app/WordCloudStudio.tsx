@@ -124,13 +124,18 @@ export function WordCloudStudio() {
   return (
     <main className="studio-shell">
       <header className="studio-header">
-        <div>
-          <p className="brand-mark" aria-hidden="true">☁</p>
-          <h1>클라우드 수업실</h1>
-          <p>학생들의 생각을 한눈에 모아보세요.</p>
+        <div className="brand-lockup">
+          <svg className="brand-mark" aria-hidden="true" viewBox="0 0 48 36" fill="none">
+            <path d="M13 29h22.5a8.5 8.5 0 0 0 .7-17 12.5 12.5 0 0 0-23.7 3.3A7 7 0 0 0 13 29Z" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" />
+            <path d="m32.5 5 .8 2.1 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.1Z" fill="currentColor" />
+          </svg>
+          <div>
+            <h1>클라우드 수업실</h1>
+            <p>학생들의 생각을 한눈에 모아보세요.</p>
+          </div>
         </div>
         <div className="header-actions">
-          <p className="privacy-notice"><span>광고 없음</span><span>서버 저장 없음</span></p>
+          <p className="privacy-notice">광고 없음 <span aria-hidden="true">·</span> 서버 저장 없음</p>
           <div>
             <button type="button" onClick={(event) => openDialog("help", event.currentTarget)}>도움말</button>
             <button type="button" onClick={(event) => openDialog("updates", event.currentTarget)}>업데이트 내역</button>
@@ -151,18 +156,20 @@ export function WordCloudStudio() {
       </section>
 
       <QuickSettings settings={settings} onChange={changeSettings} />
-      <TextWorkspace
-        text={text}
-        excluded={excluded}
-        keywords={keywords}
-        error={workspaceError}
-        truncated={text.length > MAX_TEXT_LENGTH}
-        onTextChange={setText}
-        onExcludedChange={setExcluded}
-        onKeywordsChange={changeKeywords}
-        onGenerate={generate}
-      />
-      <WordFrequency words={displayedWords} />
+      <div className="workspace-grid">
+        <TextWorkspace
+          text={text}
+          excluded={excluded}
+          keywords={keywords}
+          error={workspaceError}
+          truncated={text.length > MAX_TEXT_LENGTH}
+          onTextChange={setText}
+          onExcludedChange={setExcluded}
+          onKeywordsChange={changeKeywords}
+          onGenerate={generate}
+        />
+        <WordFrequency words={displayedWords} />
+      </div>
       {activeDialog ? <InfoDialog type={activeDialog} onClose={closeDialog} /> : null}
     </main>
   );

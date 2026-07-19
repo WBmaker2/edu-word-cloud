@@ -37,10 +37,17 @@ type PlacedWord = ReturnType<typeof layoutWords>["placed"][number];
 
 const EXAMPLE_WORDS = [
   { text: "우리", x: 600, y: 315, size: 92, colorIndex: 0 },
+  { text: "배움", x: 750, y: 242, size: 39, colorIndex: 1 },
+  { text: "용기", x: 445, y: 250, size: 34, colorIndex: 2 },
+  { text: "친구", x: 900, y: 340, size: 36, colorIndex: 3 },
   { text: "수업", x: 405, y: 435, size: 68, colorIndex: 1 },
   { text: "생각", x: 770, y: 425, size: 64, colorIndex: 2 },
+  { text: "질문", x: 530, y: 505, size: 34, colorIndex: 4 },
+  { text: "협력", x: 685, y: 535, size: 38, colorIndex: 1 },
   { text: "함께", x: 570, y: 555, size: 54, colorIndex: 3 },
   { text: "성장", x: 845, y: 565, size: 48, colorIndex: 4 },
+  { text: "존중", x: 380, y: 580, size: 35, colorIndex: 0 },
+  { text: "실천", x: 930, y: 470, size: 31, colorIndex: 2 },
 ] as const;
 
 export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasProps) {
@@ -76,6 +83,7 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
     context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     context.textAlign = "center";
     context.textBaseline = "middle";
+    drawMaskOutline(context, settings.maskId, palette.colors[0]);
 
     if (!layout) {
       drawExampleCloud(context, font.family, font.weight, palette.colors);
@@ -145,7 +153,7 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
   }
 
   return (
-    <section aria-label="워드 클라우드 결과">
+    <section className="cloud-canvas" aria-label="워드 클라우드 결과">
       <canvas
         ref={canvasRef}
         width={1200}
@@ -154,24 +162,44 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
         aria-describedby={result ? "cloud-summary" : "cloud-empty-message"}
         style={{ display: "block", width: "100%", height: "auto", aspectRatio: "3 / 2" }}
       />
-      {result ? (
-        <p id="cloud-summary">
-          표시된 단어 {layout?.placed.length ?? 0}개 · 공간 부족으로 생략 {layout?.omitted.length ?? 0}개
-        </p>
-      ) : (
-        <p id="cloud-empty-message">텍스트를 붙여넣으면 여기에 결과가 나타나요.</p>
-      )}
-      <button
-        type="button"
-        onClick={handleDownload}
-        disabled={!result || !layout?.placed.length}
-        title={result ? undefined : "단어를 만든 뒤 PNG로 저장할 수 있어요."}
-      >
-        PNG 저장
-      </button>
+      <div className="cloud-canvas__footer">
+        {result ? (
+          <p id="cloud-summary">표시된 단어 {layout?.placed.length ?? 0}개 · 공간 부족으로 생략 {layout?.omitted.length ?? 0}개</p>
+        ) : (
+          <p id="cloud-empty-message">텍스트를 붙여넣으면 여기에 결과가 나타나요.</p>
+        )}
+        <button
+          type="button"
+          onClick={handleDownload}
+          disabled={!result || !layout?.placed.length}
+          title={result ? undefined : "단어를 만든 뒤 PNG로 저장할 수 있어요."}
+        >
+          PNG 저장
+        </button>
+      </div>
       {!result ? <p className="download-note">단어를 만든 뒤 PNG로 저장할 수 있어요.</p> : null}
     </section>
   );
+}
+
+function drawMaskOutline(context: CanvasRenderingContext2D, maskId: string, color: string) {
+  context.save();
+  context.strokeStyle = color;
+  context.globalAlpha = 0.36;
+  context.lineWidth = 5;
+  context.beginPath();
+  if (maskId === "bubble") {
+    context.ellipse(600, 380, 485, 265, 0, 0, Math.PI * 2);
+    context.moveTo(300, 565);
+    context.lineTo(250, 670);
+    context.lineTo(405, 585);
+  } else if (maskId === "circle") {
+    context.arc(600, 400, 305, 0, Math.PI * 2);
+  } else {
+    context.roundRect(175, 110, 850, 580, 44);
+  }
+  context.stroke();
+  context.restore();
 }
 
 function drawExampleCloud(
