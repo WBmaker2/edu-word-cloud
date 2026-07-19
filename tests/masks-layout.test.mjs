@@ -38,3 +38,22 @@ test("layout is deterministic and remains inside the selected mask", () => {
     assert.equal(isInsideMask("heart", word.nx, word.ny), true);
   }
 });
+
+test("layout places higher-weight words first when the input is unsorted", () => {
+  const result = layoutWords({
+    words: [
+      { text: "작은", count: 1, weight: 1 },
+      { text: "큰단어", count: 9, weight: 9 },
+      { text: "중간", count: 5, weight: 5 },
+    ],
+    maskId: "circle",
+    width: 1200,
+    height: 800,
+    seed: "정렬-수업",
+  });
+
+  assert.equal(result.placed[0].text, "큰단어");
+  const largest = result.placed.find((word) => word.text === "큰단어");
+  const smallest = result.placed.find((word) => word.text === "작은");
+  assert.ok(Math.hypot(largest.nx, largest.ny) < Math.hypot(smallest.nx, smallest.ny));
+});

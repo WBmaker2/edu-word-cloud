@@ -8,13 +8,16 @@ const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
 export function layoutWords({ words, maskId, width, height, seed }) {
   const random = createRandom(seed);
-  const weights = words.map((word) => word.weight);
+  const sortedWords = [...words].sort(
+    (a, b) => b.weight - a.weight || b.count - a.count || a.text.localeCompare(b.text, "ko"),
+  );
+  const weights = sortedWords.map((word) => word.weight);
   const minWeight = Math.min(...weights);
   const maxWeight = Math.max(...weights);
   const placed = [];
   const omitted = [];
 
-  for (const [index, word] of words.entries()) {
+  for (const [index, word] of sortedWords.entries()) {
     const fontSize = fontSizeFor(word.weight, minWeight, maxWeight);
     const rotation = index > 5 && (index - 6) % 2 === 1 ? 90 : 0;
     const dimensions = wordDimensions(word.text, fontSize, rotation);
