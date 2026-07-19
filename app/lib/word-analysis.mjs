@@ -21,6 +21,7 @@ export const DEFAULT_STOP_WORDS = new Set([
   "from",
 ]);
 
+/** @param {string} value @returns {string[]} */
 export function parseList(value) {
   return [
     ...new Set(
@@ -32,6 +33,9 @@ export function parseList(value) {
   ];
 }
 
+/**
+ * @param {{ text: string; excludedWords?: string[]; keywords?: string[]; limit?: number }} options
+ */
 export function analyzeText({ text, excludedWords = [], keywords = [], limit = 40 }) {
   const normalizedSource = text.slice(0, MAX_TEXT_LENGTH);
   const truncated = text.length > MAX_TEXT_LENGTH;

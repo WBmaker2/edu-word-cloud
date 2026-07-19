@@ -128,9 +128,15 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
       ) : (
         <p id="cloud-empty-message">텍스트를 붙여넣으면 여기에 결과가 나타나요.</p>
       )}
-      <button type="button" onClick={handleDownload}>
+      <button
+        type="button"
+        onClick={handleDownload}
+        disabled={!result || !layout?.placed.length}
+        title={result ? undefined : "단어를 만든 뒤 PNG로 저장할 수 있어요."}
+      >
         PNG 저장
       </button>
+      {!result ? <p className="download-note">단어를 만든 뒤 PNG로 저장할 수 있어요.</p> : null}
     </section>
   );
 }

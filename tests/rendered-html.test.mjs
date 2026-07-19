@@ -1,11 +1,6 @@
 import assert from "node:assert/strict";
-import { access, readFile, readdir } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import test from "node:test";
-
-const developmentPreviewMeta =
-  /<meta(?=[^>]*\bname=["']codex-preview["'])(?=[^>]*\bcontent=["']development["'])[^>]*>/i;
-const templateRoot = new URL("../", import.meta.url);
-const previewRoot = new URL("../app/_sites-preview/", import.meta.url);
 
 async function render() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -13,79 +8,76 @@ async function render() {
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("http://localhost/", {
-      headers: { accept: "text/html" },
-    }),
+    new Request("http://localhost/", { headers: { accept: "text/html" } }),
     {
-      ASSETS: {
-        fetch: async () => new Response("Not found", { status: 404 }),
-      },
+      ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) },
     },
-    {
-      waitUntil() {},
-      passThroughOnException() {},
-    },
+    { waitUntil() {}, passThroughOnException() {} },
   );
 }
 
-test("server-renders the starter loading skeleton", async () => {
+test("server-renders the teacher word cloud classroom", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, developmentPreviewMeta);
-  assert.match(html, /<title>Your site is taking shape<\/title>/i);
-  assert.match(html, /Building your site/);
-  assert.match(html, /Your site is taking shape/);
-  assert.match(
-    html,
-    /Your first version will appear here automatically when it’s ready\./,
-  );
-  assert.doesNotMatch(html, /Codex/);
-  assert.match(html, /react-loading-skeleton/);
-  assert.match(html, /role="status"/);
+  for (const phrase of [
+    "클라우드 수업실",
+    "학생들의 생각을 한눈에 모아보세요",
+    "광고 없음",
+    "서버 저장 없음",
+    "워드 클라우드 만들기",
+    "업데이트 내역",
+  ]) {
+    assert.match(html, new RegExp(phrase));
+  }
+  for (const starterMarker of [
+    "codex-preview",
+    "react-loading-skeleton",
+    "Your site is taking shape",
+  ]) {
+    assert.doesNotMatch(html, new RegExp(starterMarker, "i"));
+  }
 });
 
-test("keeps the loading skeleton scoped and disposable", async () => {
-  const [preview, css, page, layout, packageJson, files] = await Promise.all([
-    readFile(new URL("SkeletonPreview.tsx", previewRoot), "utf8"),
-    readFile(new URL("preview.css", previewRoot), "utf8"),
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readdir(previewRoot),
-  ]);
+test("keeps the approved controls, accessibility signals, and privacy boundary in source", async () => {
+  const appRoot = new URL("../app/", import.meta.url);
+  const [studio, settings, workspace, frequency, dialog, options, layout, page] =
+    await Promise.all([
+      readFile(new URL("WordCloudStudio.tsx", appRoot), "utf8"),
+      readFile(new URL("components/QuickSettings.tsx", appRoot), "utf8"),
+      readFile(new URL("components/TextWorkspace.tsx", appRoot), "utf8"),
+      readFile(new URL("components/WordFrequency.tsx", appRoot), "utf8"),
+      readFile(new URL("components/InfoDialog.tsx", appRoot), "utf8"),
+      readFile(new URL("lib/cloud-options.mjs", appRoot), "utf8"),
+      readFile(new URL("layout.tsx", appRoot), "utf8"),
+      readFile(new URL("page.tsx", appRoot), "utf8"),
+    ]);
+  const source = [studio, settings, workspace, frequency, dialog, options, layout, page].join("\n");
 
-  assert.deepEqual(files.sort(), ["SkeletonPreview.tsx", "preview.css"]);
-  assert.match(preview, /from "react-loading-skeleton"/);
-  assert.match(preview, /baseColor="#eceae7"/);
-  assert.match(preview, /highlightColor="#f9f8f6"/);
-  assert.match(preview, /duration=\{2\.8\}/);
-  assert.match(preview, /sites-skeleton-search-placeholder/);
-  assert.match(packageJson, /"react-loading-skeleton": "3\.5\.0"/);
-
-  const shellIndex = preview.indexOf('className="sites-skeleton-shell"');
-  const statusIndex = preview.indexOf('className="sites-skeleton-status"');
-  assert.ok(shellIndex >= 0 && statusIndex > shellIndex);
-  assert.match(css, /position:\s*fixed/);
-  assert.match(css, /inset:\s*0/);
-  assert.match(css, /opacity:\s*0\.52/);
-  assert.match(css, /prefers-reduced-motion:\s*reduce/);
-  assert.doesNotMatch(css, /#020617|canvas|pets|progress/i);
-  assert.doesNotMatch(
-    preview,
-    /loading-spinner|status-mark|status-progress|canvas|cookie|random/i,
-  );
-
-  assert.match(page, /export const metadata:\s*Metadata/);
-  assert.match(page, /"codex-preview": "development"/);
-  assert.match(page, /<SkeletonPreview \/>/);
-  assert.match(layout, /title:\s*"Starter Project"/);
-  assert.doesNotMatch(layout, /codex-preview|_sites-preview|themeColor|\bViewport\b/);
-  assert.doesNotMatch(css, /(^|\s)(html|body)\s*\{/m);
-
-  await assert.rejects(
-    access(new URL("public/_sites-preview", templateRoot)),
-  );
+  for (const label of ["원", "말풍선", "하트", "별", "책"]) {
+    assert.match(source, new RegExp(`label: "${label}"`));
+  }
+  for (const count of [20, 40, 60, 80, 100]) {
+    assert.match(options, new RegExp(`\\b${count}\\b`));
+  }
+  assert.match(settings, /aria-pressed/);
+  assert.match(studio, /aria-live="polite"/);
+  assert.match(dialog, /<dialog open/);
+  for (const example of ["독서 감상 예시", "수업 소감 예시", "환경 수업 예시"]) {
+    assert.match(workspace, new RegExp(example));
+  }
+  assert.match(dialog, /2026-07-19 — 교사용 워드 클라우드 사이트 첫 제작/);
+  assert.match(studio, /localStorage\.setItem\("cloud-classroom-settings"/);
+  for (const privateValue of ["text", "excluded", "keywords", "result"]) {
+    assert.doesNotMatch(
+      studio,
+      new RegExp(`localStorage\\.setItem\\([^)]*\\b${privateValue}\\b`, "s"),
+    );
+  }
+  assert.match(frequency, /<table/);
+  assert.match(layout, /lang="ko"/);
+  assert.match(page, /<WordCloudStudio \/>/);
+  await assert.rejects(access(new URL("_sites-preview", appRoot)));
 });
