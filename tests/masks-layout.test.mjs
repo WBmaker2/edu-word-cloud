@@ -57,3 +57,21 @@ test("layout places higher-weight words first when the input is unsorted", () =>
   const smallest = result.placed.find((word) => word.text === "작은");
   assert.ok(Math.hypot(largest.nx, largest.ny) < Math.hypot(smallest.nx, smallest.ny));
 });
+
+test("layout keeps equal-weight words readable while fitting more of them", () => {
+  const words = Array.from({ length: 20 }, (_, index) => ({
+    text: `단어${String(index + 1).padStart(2, "0")}`,
+    count: 2,
+    weight: 2,
+  }));
+  const result = layoutWords({
+    words,
+    maskId: "circle",
+    width: 1200,
+    height: 800,
+    seed: "동점-교실",
+  });
+
+  assert.ok(result.placed.every((word) => word.fontSize >= 56 && word.fontSize <= 64));
+  assert.ok(result.placed.length >= 15);
+});

@@ -80,7 +80,7 @@ function findPosition({ placed, maskId, width, height, dimensions, startAngle })
 }
 
 function fontSizeFor(weight, minWeight, maxWeight) {
-  if (minWeight === maxWeight) return MAX_FONT_SIZE;
+  if (minWeight === maxWeight) return 60;
   return round(MIN_FONT_SIZE + ((weight - minWeight) / (maxWeight - minWeight)) * (MAX_FONT_SIZE - MIN_FONT_SIZE));
 }
 

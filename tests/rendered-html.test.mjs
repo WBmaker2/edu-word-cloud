@@ -91,4 +91,5 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
   assert.match(studio, /openerRef\.current = opener/);
   assert.match(studio, /requestAnimationFrame\(\(\) => openerRef\.current\?\.focus\(\)\)/);
   assert.match(styles, /\.info-dialog__close\s*\{[^}]*min-height:\s*44px/s);
+  assert.match(studio, /truncated=\{text\.length > MAX_TEXT_LENGTH\}/);
 });

@@ -7,11 +7,11 @@ import { QuickSettings } from "./components/QuickSettings";
 import { TextWorkspace } from "./components/TextWorkspace";
 import { WordFrequency } from "./components/WordFrequency";
 import { DEFAULT_SETTINGS, normalizeSettings } from "./lib/cloud-options.mjs";
-import { analyzeText, parseList } from "./lib/word-analysis.mjs";
+import { analyzeText, MAX_TEXT_LENGTH, parseList } from "./lib/word-analysis.mjs";
 
 type Settings = typeof DEFAULT_SETTINGS;
 type CloudWord = { text: string; count: number; weight: number; keywordRank: number | null };
-type CloudResult = { words: CloudWord[]; truncated: boolean };
+type CloudResult = { words: CloudWord[] };
 type DialogType = "help" | "updates" | null;
 
 const ERROR_MESSAGES = {
@@ -28,7 +28,6 @@ export function WordCloudStudio() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
-  const [truncated, setTruncated] = useState(false);
   const [activeDialog, setActiveDialog] = useState<DialogType>(null);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const openerRef = useRef<HTMLButtonElement | null>(null);
@@ -69,7 +68,6 @@ export function WordCloudStudio() {
       keywords,
       limit: 100,
     });
-    setTruncated(analysis.truncated);
     if (analysis.error) {
       setResult(null);
       const error = ERROR_MESSAGES[analysis.error as keyof typeof ERROR_MESSAGES];
@@ -79,7 +77,7 @@ export function WordCloudStudio() {
     }
     setWorkspaceError(null);
     setPreviewError(null);
-    setResult({ words: analysis.words, truncated: analysis.truncated });
+    setResult({ words: analysis.words });
     setStatusMessage(`워드 클라우드를 만들었어요. ${analysis.words.length}개의 단어를 찾았어요.`);
   }, [excluded, keywords, text]);
 
@@ -158,7 +156,7 @@ export function WordCloudStudio() {
         excluded={excluded}
         keywords={keywords}
         error={workspaceError}
-        truncated={truncated}
+        truncated={text.length > MAX_TEXT_LENGTH}
         onTextChange={setText}
         onExcludedChange={setExcluded}
         onKeywordsChange={changeKeywords}

@@ -89,26 +89,59 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
 
   function handleDownload() {
     const canvas = canvasRef.current;
-    if (!canvas) {
+    const browserDocument = typeof document === "undefined" ? null : document;
+    const body = browserDocument?.body;
+    const urlApi = typeof URL === "undefined" ? null : URL;
+    if (
+      !canvas ||
+      typeof canvas.toBlob !== "function" ||
+      !browserDocument ||
+      !body ||
+      typeof body.append !== "function" ||
+      !urlApi ||
+      typeof urlApi.createObjectURL !== "function" ||
+      typeof urlApi.revokeObjectURL !== "function"
+    ) {
       onDownloadError();
       return;
     }
 
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        onDownloadError();
-        return;
-      }
+    try {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          onDownloadError();
+          return;
+        }
 
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `클라우드-수업실-${formatDate(new Date())}.png`;
-      document.body.append(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    }, "image/png");
+        let url: string | null = null;
+        let link: HTMLAnchorElement | null = null;
+        let failed = false;
+        try {
+          url = urlApi.createObjectURL(blob);
+          link = browserDocument.createElement("a");
+          if (typeof link.click !== "function") {
+            failed = true;
+          } else {
+            link.href = url;
+            link.download = `클라우드-수업실-${formatDate(new Date())}.png`;
+            body.append(link);
+            link.click();
+          }
+        } catch {
+          failed = true;
+        } finally {
+          try {
+            link?.remove();
+            if (url) urlApi.revokeObjectURL(url);
+          } catch {
+            failed = true;
+          }
+        }
+        if (failed) onDownloadError();
+      }, "image/png");
+    } catch {
+      onDownloadError();
+    }
   }
 
   return (

@@ -16,3 +16,17 @@ test("renders a fixed-size accessible canvas with PNG download support", async (
   assert.match(canvasSource, /result\.words\.slice\(0, settings\.wordCount\)/);
   assert.match(canvasSource, /\[result, settings\.maskId, settings\.wordCount\]/);
 });
+
+test("reports PNG download failures when browser download APIs are unsupported or throw", async () => {
+  const canvasSource = await readFile(
+    new URL("../app/components/CloudCanvas.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(canvasSource, /typeof canvas\.toBlob !== "function"/);
+  assert.match(canvasSource, /typeof urlApi\.createObjectURL !== "function"/);
+  assert.match(canvasSource, /typeof urlApi\.revokeObjectURL !== "function"/);
+  assert.match(canvasSource, /typeof link\.click !== "function"/);
+  assert.match(canvasSource, /try\s*\{\s*canvas\.toBlob\(/s);
+  assert.match(canvasSource, /catch\s*\{\s*onDownloadError\(\);\s*\}/s);
+});
