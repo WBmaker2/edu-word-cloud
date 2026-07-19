@@ -24,7 +24,7 @@ test("server-renders the teacher word cloud classroom", async () => {
   const html = await response.text();
   for (const phrase of [
     "클라우드 수업실",
-    "학생들의 생각을 한눈에 모아보세요",
+    "학생 생각을 한눈에, 수업을 더 풍성하게",
     "광고 없음",
     "서버 저장 없음",
     "워드 클라우드 만들기",
@@ -66,7 +66,7 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
   assert.match(settings, /aria-pressed/);
   assert.match(studio, /aria-live="polite"/);
   assert.match(dialog, /<dialog ref=\{dialogRef\}/);
-  for (const example of ["독서 감상 예시", "수업 소감 예시", "환경 수업 예시"]) {
+  for (const example of ["초등 저학년", "초등 고학년", "중학생", "고등학생", "교과 활동"]) {
     assert.match(workspace, new RegExp(example));
   }
   assert.match(dialog, /2026-07-19 — 교사용 워드 클라우드 사이트 첫 제작/);

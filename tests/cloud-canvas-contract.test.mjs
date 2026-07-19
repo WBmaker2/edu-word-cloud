@@ -9,7 +9,7 @@ test("renders a fixed-size accessible canvas with PNG download support", async (
   );
 
   assert.match(canvasSource, /width=\{1200\}/);
-  assert.match(canvasSource, /height=\{800\}/);
+  assert.match(canvasSource, /height=\{500\}/);
   assert.match(canvasSource, /toBlob/);
   assert.match(canvasSource, /클라우드-수업실-/);
   assert.match(canvasSource, /aria-label="워드 클라우드 미리보기"/);

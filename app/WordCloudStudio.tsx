@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CloudCanvas } from "./components/CloudCanvas";
 import { InfoDialog } from "./components/InfoDialog";
 import { QuickSettings } from "./components/QuickSettings";
-import { TextWorkspace } from "./components/TextWorkspace";
+import { DEFAULT_SAMPLE_TEXT, TextWorkspace } from "./components/TextWorkspace";
 import { WordFrequency } from "./components/WordFrequency";
 import { DEFAULT_SETTINGS, normalizeSettings } from "./lib/cloud-options.mjs";
 import { analyzeText, MAX_TEXT_LENGTH, parseList } from "./lib/word-analysis.mjs";
@@ -19,12 +19,21 @@ const ERROR_MESSAGES = {
   insufficient: "두 글자 이상의 단어를 조금 더 입력해 주세요.",
 } as const;
 
+const INITIAL_ANALYSIS = analyzeText({
+  text: DEFAULT_SAMPLE_TEXT,
+  excludedWords: [],
+  keywords: [],
+  limit: 100,
+});
+
 export function WordCloudStudio() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
-  const [text, setText] = useState("");
+  const [text, setText] = useState(DEFAULT_SAMPLE_TEXT);
   const [excluded, setExcluded] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
-  const [result, setResult] = useState<CloudResult | null>(null);
+  const [result, setResult] = useState<CloudResult | null>(() => (
+    INITIAL_ANALYSIS.error ? null : { words: INITIAL_ANALYSIS.words }
+  ));
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
@@ -131,7 +140,7 @@ export function WordCloudStudio() {
           </svg>
           <div>
             <h1>클라우드 수업실</h1>
-            <p>학생들의 생각을 한눈에 모아보세요.</p>
+            <p>학생 생각을 한눈에, 수업을 더 풍성하게</p>
           </div>
         </div>
         <div className="header-actions">

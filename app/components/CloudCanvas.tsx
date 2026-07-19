@@ -8,7 +8,7 @@ import {
 } from "../lib/cloud-options.mjs";
 
 const CANVAS_WIDTH = 1200;
-const CANVAS_HEIGHT = 800;
+const CANVAS_HEIGHT = 500;
 
 type CloudSettings = {
   maskId: string;
@@ -157,7 +157,7 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
       <canvas
         ref={canvasRef}
         width={1200}
-        height={800}
+        height={500}
         aria-label="워드 클라우드 미리보기"
         aria-describedby={result ? "cloud-summary" : "cloud-empty-message"}
         style={{ display: "block", width: "100%", height: "auto", aspectRatio: "3 / 2" }}
@@ -189,14 +189,14 @@ function drawMaskOutline(context: CanvasRenderingContext2D, maskId: string, colo
   context.lineWidth = 5;
   context.beginPath();
   if (maskId === "bubble") {
-    context.ellipse(600, 380, 485, 265, 0, 0, Math.PI * 2);
-    context.moveTo(300, 565);
-    context.lineTo(250, 670);
-    context.lineTo(405, 585);
+    context.ellipse(600, 238, 470, 190, 0, 0, Math.PI * 2);
+    context.moveTo(318, 370);
+    context.lineTo(275, 455);
+    context.lineTo(408, 388);
   } else if (maskId === "circle") {
-    context.arc(600, 400, 305, 0, Math.PI * 2);
+    context.arc(600, 250, 208, 0, Math.PI * 2);
   } else {
-    context.roundRect(175, 110, 850, 580, 44);
+    context.roundRect(175, 74, 850, 352, 44);
   }
   context.stroke();
   context.restore();

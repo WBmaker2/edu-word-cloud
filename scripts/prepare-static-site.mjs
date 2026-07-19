@@ -1,4 +1,4 @@
-import { cp, mkdir, rm } from "node:fs/promises";
+import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const root = process.cwd();
@@ -10,8 +10,14 @@ async function prepareStaticSite() {
   await rm(outputDirectory, { recursive: true, force: true });
   await mkdir(outputDirectory, { recursive: true });
   await cp(clientDirectory, outputDirectory, { recursive: true });
-  await cp(resolve(prerenderDirectory, "index.html"), resolve(outputDirectory, "index.html"));
-  await cp(resolve(prerenderDirectory, "404.html"), resolve(outputDirectory, "404.html"));
+  await writePage("index.html");
+  await writePage("404.html");
+}
+
+async function writePage(filename) {
+  const source = await readFile(resolve(prerenderDirectory, filename), "utf8");
+  const page = source.replaceAll('"/assets/', '"./assets/');
+  await writeFile(resolve(outputDirectory, filename), page);
 }
 
 prepareStaticSite().catch((error) => {
