@@ -1,15 +1,37 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 type InfoDialogProps = { type: "help" | "updates"; onClose: () => void };
 
 export function InfoDialog({ type, onClose }: InfoDialogProps) {
   const isHelp = type === "help";
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    dialog.showModal();
+    closeButtonRef.current?.focus();
+    const handleCancel = (event: Event) => {
+      event.preventDefault();
+      onClose();
+    };
+    dialog.addEventListener("cancel", handleCancel);
+    return () => {
+      dialog.removeEventListener("cancel", handleCancel);
+      if (dialog.open) dialog.close();
+    };
+  }, [onClose]);
+
   return (
-    <dialog open aria-labelledby="info-dialog-title" className="info-dialog">
+    <dialog ref={dialogRef} aria-labelledby="info-dialog-title" className="info-dialog">
       <div className="info-dialog__content">
         <div className="section-heading">
           <h2 id="info-dialog-title">{isHelp ? "도움말" : "업데이트 내역"}</h2>
-          <button type="button" aria-label="안내 닫기" onClick={onClose}>닫기</button>
+          <button ref={closeButtonRef} type="button" className="info-dialog__close" aria-label="안내 닫기" onClick={onClose}>닫기</button>
         </div>
         {isHelp ? (
           <ol>

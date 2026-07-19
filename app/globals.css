@@ -84,7 +84,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .info-dialog::backdrop { background: rgb(20 41 77 / 42%); }
 .info-dialog__content { padding: 26px; }
 .info-dialog ol { padding-left: 22px; line-height: 1.8; }
-.info-dialog .section-heading button { min-height: 36px; }
+.info-dialog__close { min-height: 44px; }
+.preview-error { margin: 14px 0 0; padding: 12px; border-radius: 10px; background: #fff0ed; color: #9c2e1d; }
 .sr-only { position: absolute; overflow: hidden; width: 1px; height: 1px; margin: -1px; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
 @media (max-width: 899px) {

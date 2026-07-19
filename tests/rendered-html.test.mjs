@@ -43,7 +43,7 @@ test("server-renders the teacher word cloud classroom", async () => {
 
 test("keeps the approved controls, accessibility signals, and privacy boundary in source", async () => {
   const appRoot = new URL("../app/", import.meta.url);
-  const [studio, settings, workspace, frequency, dialog, options, layout, page] =
+  const [studio, settings, workspace, frequency, dialog, options, layout, page, styles] =
     await Promise.all([
       readFile(new URL("WordCloudStudio.tsx", appRoot), "utf8"),
       readFile(new URL("components/QuickSettings.tsx", appRoot), "utf8"),
@@ -53,6 +53,7 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
       readFile(new URL("lib/cloud-options.mjs", appRoot), "utf8"),
       readFile(new URL("layout.tsx", appRoot), "utf8"),
       readFile(new URL("page.tsx", appRoot), "utf8"),
+      readFile(new URL("globals.css", appRoot), "utf8"),
     ]);
   const source = [studio, settings, workspace, frequency, dialog, options, layout, page].join("\n");
 
@@ -64,7 +65,7 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
   }
   assert.match(settings, /aria-pressed/);
   assert.match(studio, /aria-live="polite"/);
-  assert.match(dialog, /<dialog open/);
+  assert.match(dialog, /<dialog ref=\{dialogRef\}/);
   for (const example of ["독서 감상 예시", "수업 소감 예시", "환경 수업 예시"]) {
     assert.match(workspace, new RegExp(example));
   }
@@ -80,4 +81,14 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
   assert.match(layout, /lang="ko"/);
   assert.match(page, /<WordCloudStudio \/>/);
   await assert.rejects(access(new URL("_sites-preview", appRoot)));
+
+  assert.match(studio, /className="preview-error" role="alert"/);
+  assert.match(studio, /PNG 저장에 실패했어요\./);
+  assert.match(studio, /저장 버튼을 다시 눌러 주세요\./);
+  assert.match(dialog, /dialog\.showModal\(\)/);
+  assert.match(dialog, /addEventListener\("cancel", handleCancel\)/);
+  assert.match(dialog, /closeButtonRef\.current\?\.focus\(\)/);
+  assert.match(studio, /openerRef\.current = opener/);
+  assert.match(studio, /requestAnimationFrame\(\(\) => openerRef\.current\?\.focus\(\)\)/);
+  assert.match(styles, /\.info-dialog__close\s*\{[^}]*min-height:\s*44px/s);
 });

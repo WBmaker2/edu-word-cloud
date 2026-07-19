@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CloudCanvas } from "./components/CloudCanvas";
 import { InfoDialog } from "./components/InfoDialog";
 import { QuickSettings } from "./components/QuickSettings";
@@ -25,11 +25,13 @@ export function WordCloudStudio() {
   const [excluded, setExcluded] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
   const [result, setResult] = useState<CloudResult | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [truncated, setTruncated] = useState(false);
   const [activeDialog, setActiveDialog] = useState<DialogType>(null);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+  const openerRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     const restorePreferences = window.setTimeout(() => {
@@ -72,12 +74,13 @@ export function WordCloudStudio() {
       setResult(null);
       const error = ERROR_MESSAGES[analysis.error as keyof typeof ERROR_MESSAGES];
       setWorkspaceError(error);
-      setMessage(error);
+      setStatusMessage(null);
       return;
     }
     setWorkspaceError(null);
+    setPreviewError(null);
     setResult({ words: analysis.words, truncated: analysis.truncated });
-    setMessage(`워드 클라우드를 만들었어요. ${analysis.words.length}개의 단어를 찾았어요.`);
+    setStatusMessage(`워드 클라우드를 만들었어요. ${analysis.words.length}개의 단어를 찾았어요.`);
   }, [excluded, keywords, text]);
 
   const changeSettings = useCallback((nextSettings: Settings) => {
@@ -90,13 +93,13 @@ export function WordCloudStudio() {
     if (nextKeywords.length > 3) {
       const error = "핵심어는 최대 3개까지 입력할 수 있어요.";
       setWorkspaceError(error);
-      setMessage(error);
+      setStatusMessage(null);
       return;
     }
     setKeywords(nextKeywords);
     if (workspaceError === "핵심어는 최대 3개까지 입력할 수 있어요.") {
       setWorkspaceError(null);
-      setMessage(null);
+      setStatusMessage(null);
     }
   }, [workspaceError]);
 
@@ -104,6 +107,21 @@ export function WordCloudStudio() {
     () => result?.words.slice(0, settings.wordCount) ?? [],
     [result, settings.wordCount],
   );
+
+  const openDialog = useCallback((type: Exclude<DialogType, null>, opener: HTMLButtonElement) => {
+    openerRef.current = opener;
+    setActiveDialog(type);
+  }, []);
+
+  const closeDialog = useCallback(() => {
+    setActiveDialog(null);
+    window.requestAnimationFrame(() => openerRef.current?.focus());
+  }, []);
+
+  const reportDownloadError = useCallback(() => {
+    setPreviewError("PNG 저장에 실패했어요.");
+    setStatusMessage(null);
+  }, []);
 
   return (
     <main className="studio-shell">
@@ -116,13 +134,13 @@ export function WordCloudStudio() {
         <div className="header-actions">
           <p className="privacy-notice"><span>광고 없음</span><span>서버 저장 없음</span></p>
           <div>
-            <button type="button" onClick={() => setActiveDialog("help")}>도움말</button>
-            <button type="button" onClick={() => setActiveDialog("updates")}>업데이트 내역</button>
+            <button type="button" onClick={(event) => openDialog("help", event.currentTarget)}>도움말</button>
+            <button type="button" onClick={(event) => openDialog("updates", event.currentTarget)}>업데이트 내역</button>
           </div>
         </div>
       </header>
 
-      <p className="sr-only" aria-live="polite">{message ?? ""}</p>
+      <p className="sr-only" aria-live="polite">{statusMessage ?? ""}</p>
       <section className="preview-panel" aria-labelledby="preview-title">
         <div className="section-heading">
           <div>
@@ -130,7 +148,8 @@ export function WordCloudStudio() {
             <p>{result ? "설정을 바꾸면 결과가 바로 달라져요." : "예시를 보거나 학생 답변을 붙여넣어 시작해 보세요."}</p>
           </div>
         </div>
-        <CloudCanvas result={result} settings={settings} onDownloadError={() => setMessage("PNG 저장에 실패했어요. 다시 시도해 주세요.")} />
+        <CloudCanvas result={result} settings={settings} onDownloadError={reportDownloadError} />
+        {previewError ? <p className="preview-error" role="alert"><strong>{previewError}</strong> 저장 버튼을 다시 눌러 주세요.</p> : null}
       </section>
 
       <QuickSettings settings={settings} onChange={changeSettings} />
@@ -146,7 +165,7 @@ export function WordCloudStudio() {
         onGenerate={generate}
       />
       <WordFrequency words={displayedWords} />
-      {activeDialog ? <InfoDialog type={activeDialog} onClose={() => setActiveDialog(null)} /> : null}
+      {activeDialog ? <InfoDialog type={activeDialog} onClose={closeDialog} /> : null}
     </main>
   );
 }
