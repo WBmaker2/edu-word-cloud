@@ -56,14 +56,15 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
   const layout = useMemo(() => {
     if (!result) return null;
 
+    const displayedWords = result.words.slice(0, settings.wordCount);
     return layoutWords({
-      words: result.words,
+      words: displayedWords,
       maskId: settings.maskId,
       width: CANVAS_WIDTH,
       height: CANVAS_HEIGHT,
-      seed: result.words.map(({ text, count }) => `${text}:${count}`).join("|"),
+      seed: displayedWords.map(({ text, count }) => `${text}:${count}`).join("|"),
     });
-  }, [result, settings.maskId]);
+  }, [result, settings.maskId, settings.wordCount]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -84,7 +85,7 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
     for (const word of layout.placed) {
       drawWord(context, word, font.family, font.weight, palette.colors);
     }
-  }, [font, layout, palette]);
+  }, [font, layout, palette, settings.wordCount]);
 
   function handleDownload() {
     const canvas = canvasRef.current;

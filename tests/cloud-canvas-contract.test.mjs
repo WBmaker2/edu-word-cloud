@@ -13,4 +13,6 @@ test("renders a fixed-size accessible canvas with PNG download support", async (
   assert.match(canvasSource, /toBlob/);
   assert.match(canvasSource, /클라우드-수업실-/);
   assert.match(canvasSource, /aria-label="워드 클라우드 미리보기"/);
+  assert.match(canvasSource, /result\.words\.slice\(0, settings\.wordCount\)/);
+  assert.match(canvasSource, /\[result, settings\.maskId, settings\.wordCount\]/);
 });
