@@ -64,6 +64,14 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
     assert.match(options, new RegExp(`\\b${count}\\b`));
   }
   assert.match(settings, /aria-pressed/);
+  assert.match(settings, /이전 색상/);
+  assert.match(settings, /다음 색상/);
+  assert.match(settings, /ChevronIcon/);
+  assert.match(settings, /화살표를 처음 누르면 첫 색상부터 비교해요/);
+  assert.match(settings, /aria-live="polite"/);
+  for (const label of ["차분한 보라", "봄빛 파스텔"]) {
+    assert.match(options, new RegExp(`label: "${label}"`));
+  }
   assert.match(studio, /aria-live="polite"/);
   assert.match(dialog, /<dialog ref=\{dialogRef\}/);
   for (const example of ["초등 저학년", "초등 고학년", "중학생", "고등학생", "교과 활동"]) {
@@ -71,6 +79,7 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
   }
   assert.match(dialog, /2026-07-19 — 교사용 워드 클라우드 사이트 첫 제작/);
   assert.match(dialog, /2026-07-23 — 선택한 마스크 안에 단어가 배치되도록/);
+  assert.match(dialog, /현재 색상 이름과 첫 화살표의 비교 순서를 보여 주고/);
   assert.match(settings, /linear-gradient\(135deg/);
   assert.match(studio, /localStorage\.setItem\("cloud-classroom-settings"/);
   for (const privateValue of ["text", "excluded", "keywords", "result"]) {
@@ -93,5 +102,6 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
   assert.match(studio, /openerRef\.current = opener/);
   assert.match(studio, /requestAnimationFrame\(\(\) => openerRef\.current\?\.focus\(\)\)/);
   assert.match(styles, /\.info-dialog__close\s*\{[^}]*min-height:\s*44px/s);
+  assert.match(styles, /\.setting-group:nth-of-type\(odd\)/);
   assert.match(studio, /truncated=\{text\.length > MAX_TEXT_LENGTH\}/);
 });

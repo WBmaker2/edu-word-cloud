@@ -11,6 +11,8 @@ export const PALETTE_OPTIONS = [
   { id: "clear", label: "맑은 파랑", colors: ["#1f4fbf", "#3478d4", "#2b8f83", "#f08a5d", "#6b5fb5"] },
   { id: "warm", label: "따뜻한 주황", colors: ["#8f3f2c", "#c45f3e", "#e09145", "#6e7c4f", "#59433a"] },
   { id: "rainbow", label: "다채로운 무지개", colors: ["#d64545", "#e28b32", "#2f8a58", "#2873b8", "#7554a8"] },
+  { id: "violet", label: "차분한 보라", colors: ["#43356d", "#66529e", "#8c77be", "#a9a2d8", "#3c6b8c"] },
+  { id: "spring", label: "봄빛 파스텔", colors: ["#d95d78", "#ee9f75", "#d8b94d", "#6fa87e", "#578bc0"] },
 ];
 
 export const FONT_OPTIONS = [

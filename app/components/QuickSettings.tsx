@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import {
   FONT_OPTIONS,
   MASK_OPTIONS,
   PALETTE_OPTIONS,
   WORD_COUNT_OPTIONS,
 } from "../lib/cloud-options.mjs";
+import { canMovePalette, getPaletteNavigationTarget } from "../lib/palette-navigation.mjs";
 
 type Settings = {
   maskId: string;
@@ -22,6 +24,23 @@ type QuickSettingsProps = {
 type Choice = { id: string; label: string; glyph?: string; colors?: readonly string[] };
 
 export function QuickSettings({ settings, onChange }: QuickSettingsProps) {
+  const [hasNavigatedPalette, setHasNavigatedPalette] = useState(false);
+
+  function selectPalette(paletteId: string) {
+    setHasNavigatedPalette(true);
+    onChange({ ...settings, paletteId });
+  }
+
+  function movePalette(direction: -1 | 1) {
+    const paletteId = getPaletteNavigationTarget(
+      settings.paletteId,
+      direction,
+      hasNavigatedPalette,
+    );
+    setHasNavigatedPalette(true);
+    onChange({ ...settings, paletteId });
+  }
+
   return (
     <section className="quick-settings" aria-labelledby="settings-title">
       <h2 id="settings-title" className="sr-only">빠른 설정</h2>
@@ -32,12 +51,12 @@ export function QuickSettings({ settings, onChange }: QuickSettingsProps) {
         onSelect={(maskId) => onChange({ ...settings, maskId })}
         kind="mask"
       />
-      <SettingGroup
-        label="색상"
-        choices={PALETTE_OPTIONS}
+      <PaletteSettingGroup
         selected={settings.paletteId}
-        onSelect={(paletteId) => onChange({ ...settings, paletteId })}
-        kind="palette"
+        onSelect={selectPalette}
+        onMove={movePalette}
+        canMovePrevious={canMovePalette(settings.paletteId, -1, hasNavigatedPalette)}
+        canMoveNext={canMovePalette(settings.paletteId, 1, hasNavigatedPalette)}
       />
       <SettingGroup
         label="글꼴"
@@ -54,6 +73,72 @@ export function QuickSettings({ settings, onChange }: QuickSettingsProps) {
         kind="count"
       />
     </section>
+  );
+}
+
+function PaletteSettingGroup({
+  selected,
+  onSelect,
+  onMove,
+  canMovePrevious,
+  canMoveNext,
+}: {
+  selected: string;
+  onSelect: (id: string) => void;
+  onMove: (direction: -1 | 1) => void;
+  canMovePrevious: boolean;
+  canMoveNext: boolean;
+}) {
+  const selectedLabel = PALETTE_OPTIONS.find((choice) => choice.id === selected)?.label ?? "아직 선택 안 함";
+
+  return (
+    <fieldset className="setting-group setting-group--palette">
+      <legend>색상</legend>
+      <div className="setting-options setting-options--palette">
+        {PALETTE_OPTIONS.map((choice) => {
+          const active = choice.id === selected;
+          return (
+            <button
+              type="button"
+              key={choice.id}
+              className={active ? `setting-option setting-option--${choice.id} is-selected` : `setting-option setting-option--${choice.id}`}
+              aria-pressed={active}
+              aria-label={`색상: ${choice.label}`}
+              onClick={() => onSelect(choice.id)}
+            >
+              <span
+                className="palette-swatch"
+                aria-hidden="true"
+                style={{ background: `linear-gradient(135deg, ${choice.colors.join(", ")})` }}
+              >
+                {active ? "✓" : ""}
+              </span>
+              <span className="setting-label">{choice.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="palette-navigation" aria-label="색상 한 칸씩 비교">
+        <button type="button" aria-label="이전 색상" title="이전 색상" disabled={!canMovePrevious} onClick={() => onMove(-1)}>
+          <ChevronIcon direction="left" />
+        </button>
+        <button type="button" aria-label="다음 색상" title="다음 색상" disabled={!canMoveNext} onClick={() => onMove(1)}>
+          <ChevronIcon direction="right" />
+        </button>
+      </div>
+      <p className="setting-description" aria-live="polite">
+        현재: {selectedLabel} · 화살표를 처음 누르면 첫 색상부터 비교해요.
+      </p>
+    </fieldset>
+  );
+}
+
+function ChevronIcon({ direction }: { direction: "left" | "right" }) {
+  const path = direction === "left" ? "M14 5 7 12l7 7" : "m10 5 7 7-7 7";
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d={path} />
+    </svg>
   );
 }
 
