@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { MASK_IDS, isInsideMask } from "../app/lib/masks.mjs";
+import { MASK_IDS, getMaskBounds, isInsideMask } from "../app/lib/masks.mjs";
 import { layoutWords } from "../app/lib/cloud-layout.mjs";
 
 test("all five masks include the center and reject far corners", () => {
@@ -74,4 +74,24 @@ test("layout keeps equal-weight words readable while fitting more of them", () =
 
   assert.ok(result.placed.every((word) => word.fontSize >= 56 && word.fontSize <= 64));
   assert.ok(result.placed.length >= 15);
+});
+
+test("layout uses the same centered bounds as the canvas for every mask", () => {
+  const width = 1200;
+  const height = 500;
+  const words = Array.from({ length: 12 }, (_, index) => ({
+    text: `수업단어${index + 1}`,
+    count: 12 - index,
+    weight: 12 - index,
+  }));
+
+  for (const maskId of MASK_IDS) {
+    const bounds = getMaskBounds(maskId, width, height);
+    assert.ok(bounds.halfWidth <= width / 2, maskId);
+    assert.ok(bounds.halfHeight <= height / 2, maskId);
+    const result = layoutWords({ words, maskId, width, height, seed: `마스크-${maskId}` });
+    for (const word of result.placed) {
+      assert.equal(isInsideMask(maskId, word.nx, word.ny, width, height), true, `${maskId}: ${word.text}`);
+    }
+  }
 });

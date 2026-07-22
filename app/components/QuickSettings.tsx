@@ -19,7 +19,7 @@ type QuickSettingsProps = {
   onChange: (settings: Settings) => void;
 };
 
-type Choice = { id: string; label: string; glyph?: string };
+type Choice = { id: string; label: string; glyph?: string; colors?: readonly string[] };
 
 export function QuickSettings({ settings, onChange }: QuickSettingsProps) {
   return (
@@ -88,7 +88,15 @@ function SettingGroup({
               onClick={() => onSelect(choice.id)}
             >
               {kind === "mask" ? <span className="setting-icon" aria-hidden="true">{choice.glyph}</span> : null}
-              {kind === "palette" ? <span className="palette-swatch" aria-hidden="true">{active ? "✓" : ""}</span> : null}
+              {kind === "palette" ? (
+                <span
+                  className="palette-swatch"
+                  aria-hidden="true"
+                  style={{ background: `linear-gradient(135deg, ${choice.colors?.join(", ") ?? "#0d3f93"})` }}
+                >
+                  {active ? "✓" : ""}
+                </span>
+              ) : null}
               <span className="setting-label">{choice.label}</span>
             </button>
           );

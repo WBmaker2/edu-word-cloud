@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { layoutWords } from "../lib/cloud-layout.mjs";
+import { getMaskBounds, traceMaskPath } from "../lib/masks.mjs";
 import {
   FONT_OPTIONS,
   PALETTE_OPTIONS,
@@ -93,7 +94,7 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
     for (const word of layout.placed) {
       drawWord(context, word, font.family, font.weight, palette.colors);
     }
-  }, [font, layout, palette, settings.wordCount]);
+  }, [font, layout, palette, settings.maskId, settings.wordCount]);
 
   function handleDownload() {
     const canvas = canvasRef.current;
@@ -160,7 +161,7 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
         height={500}
         aria-label="워드 클라우드 미리보기"
         aria-describedby={result ? "cloud-summary" : "cloud-empty-message"}
-        style={{ display: "block", width: "100%", height: "auto", aspectRatio: "3 / 2" }}
+        style={{ display: "block", width: "100%", height: "auto", aspectRatio: "12 / 5" }}
       />
       <div className="cloud-canvas__footer">
         {result ? (
@@ -183,21 +184,16 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
 }
 
 function drawMaskOutline(context: CanvasRenderingContext2D, maskId: string, color: string) {
+  const { halfWidth, halfHeight } = getMaskBounds(maskId, CANVAS_WIDTH, CANVAS_HEIGHT);
   context.save();
   context.strokeStyle = color;
   context.globalAlpha = 0.36;
   context.lineWidth = 5;
+  context.translate(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+  context.scale(halfWidth, halfHeight);
+  context.lineWidth /= Math.max(halfWidth, halfHeight);
   context.beginPath();
-  if (maskId === "bubble") {
-    context.ellipse(600, 238, 470, 190, 0, 0, Math.PI * 2);
-    context.moveTo(318, 370);
-    context.lineTo(275, 455);
-    context.lineTo(408, 388);
-  } else if (maskId === "circle") {
-    context.arc(600, 250, 208, 0, Math.PI * 2);
-  } else {
-    context.roundRect(175, 74, 850, 352, 44);
-  }
+  traceMaskPath(context, maskId);
   context.stroke();
   context.restore();
 }

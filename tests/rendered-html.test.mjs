@@ -70,6 +70,8 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
     assert.match(workspace, new RegExp(example));
   }
   assert.match(dialog, /2026-07-19 — 교사용 워드 클라우드 사이트 첫 제작/);
+  assert.match(dialog, /2026-07-23 — 선택한 마스크 안에 단어가 배치되도록/);
+  assert.match(settings, /linear-gradient\(135deg/);
   assert.match(studio, /localStorage\.setItem\("cloud-classroom-settings"/);
   for (const privateValue of ["text", "excluded", "keywords", "result"]) {
     assert.doesNotMatch(

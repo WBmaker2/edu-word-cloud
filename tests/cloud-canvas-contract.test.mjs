@@ -15,6 +15,8 @@ test("renders a fixed-size accessible canvas with PNG download support", async (
   assert.match(canvasSource, /aria-label="워드 클라우드 미리보기"/);
   assert.match(canvasSource, /result\.words\.slice\(0, settings\.wordCount\)/);
   assert.match(canvasSource, /\[result, settings\.maskId, settings\.wordCount\]/);
+  assert.match(canvasSource, /traceMaskPath\(context, maskId\)/);
+  assert.doesNotMatch(canvasSource, /roundRect/);
 });
 
 test("reports PNG download failures when browser download APIs are unsupported or throw", async () => {

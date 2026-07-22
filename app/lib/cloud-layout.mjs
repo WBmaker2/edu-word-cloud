@@ -106,7 +106,13 @@ function isInsideRectangle(maskId, candidate, width, height) {
     [candidate.x, candidate.y],
   ];
 
-  return samples.every(([x, y]) => isInsideMask(maskId, x / (width / 2) - 1, y / (height / 2) - 1));
+  return samples.every(([x, y]) => isInsideMask(
+    maskId,
+    x / (width / 2) - 1,
+    y / (height / 2) - 1,
+    width,
+    height,
+  ));
 }
 
 function overlaps(placed, candidate) {
