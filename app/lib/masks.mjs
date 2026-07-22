@@ -10,7 +10,7 @@ export function getMaskBounds(maskId, width, height) {
   const shortSide = Math.min(width, height);
 
   if (maskId === "bubble") return { halfWidth: width * 0.39, halfHeight: height * 0.36 };
-  if (maskId === "book") return { halfWidth: width * 0.38, halfHeight: height * 0.34 };
+  if (maskId === "book") return { halfWidth: width * 0.25, halfHeight: height * 0.42 };
   return { halfWidth: shortSide * 0.44, halfHeight: shortSide * 0.44 };
 }
 
@@ -26,10 +26,7 @@ function isInsideLocalMask(maskId, localX, localY) {
   if (Math.abs(localX) > 1 || Math.abs(localY) > 1) return false;
   if (maskId === "circle") return localX * localX + localY * localY <= 0.88;
   if (maskId === "bubble") {
-    return (
-      (localX * localX) / 0.92 + ((localY + 0.1) * (localY + 0.1)) / 0.64 <= 1 ||
-      isInsideTriangle(localX, localY, [-0.5, 0.42], [-0.12, 0.45], [-0.58, 0.92])
-    );
+    return isInsideRoundedBubble(localX, localY) || isInsideTriangle(localX, localY, [-0.1, 0.62], [0.18, 0.62], [-0.08, 0.84]);
   }
   if (maskId === "heart") {
     const hy = -localY * 1.08 + 0.12;
@@ -39,38 +36,34 @@ function isInsideLocalMask(maskId, localX, localY) {
     return isInsidePolygon(localX, localY, STAR_POINTS);
   }
   if (maskId === "book") {
-    return (
-      Math.abs(localX) <= 0.9 &&
-      Math.abs(localY) <= 0.68 - 0.12 * Math.abs(localX) &&
-      !(Math.abs(localX) < 0.04 && Math.abs(localY) > 0.58)
-    );
+    const pageWidth = Math.abs(localX) / 0.92;
+    const top = -0.46 - 0.19 * pageWidth ** 1.6;
+    const bottom = 0.78 - 0.15 * pageWidth ** 1.7;
+    return pageWidth <= 1 && localY >= top && localY <= bottom;
   }
   return false;
 }
 
 export function traceMaskPath(context, maskId) {
-  const samples = 240;
-  for (let index = 0; index <= samples; index += 1) {
-    const angle = (index / samples) * Math.PI * 2;
-    const radius = findBoundary(maskId, Math.cos(angle), Math.sin(angle));
-    const x = Math.cos(angle) * radius;
-    const y = Math.sin(angle) * radius;
-    if (index === 0) context.moveTo(x, y);
-    else context.lineTo(x, y);
+  if (maskId === "circle") {
+    context.arc(0, 0, 0.94, 0, Math.PI * 2);
+  } else if (maskId === "bubble") {
+    traceBubblePath(context);
+  } else if (maskId === "heart") {
+    traceHeartPath(context);
+  } else if (maskId === "book") {
+    traceBookPath(context);
+  } else {
+    tracePolygonPath(context, STAR_POINTS);
   }
   context.closePath();
 }
 
-function findBoundary(maskId, directionX, directionY) {
-  const steps = 160;
-  let lastInside = 0;
+export function traceMaskDetail(context, maskId) {
+  if (maskId !== "book") return;
 
-  for (let step = 1; step <= steps; step += 1) {
-    const radius = step / steps;
-    if (!isInsideLocalMask(maskId, directionX * radius, directionY * radius)) break;
-    lastInside = radius;
-  }
-  return lastInside;
+  context.moveTo(0, -0.46);
+  context.bezierCurveTo(-0.02, -0.1, -0.02, 0.44, 0, 0.78);
 }
 
 function isInsideTriangle(x, y, [ax, ay], [bx, by], [cx, cy]) {
@@ -79,6 +72,54 @@ function isInsideTriangle(x, y, [ax, ay], [bx, by], [cx, cy]) {
   const second = ((cy - ay) * (x - cx) + (ax - cx) * (y - cy)) / denominator;
   const third = 1 - first - second;
   return first >= 0 && second >= 0 && third >= 0;
+}
+
+function isInsideRoundedBubble(x, y) {
+  const cornerRadius = 0.23;
+  const innerX = 0.73;
+  const innerY = 0.39;
+  const distanceX = Math.max(Math.abs(x) - innerX, 0);
+  const distanceY = Math.max(Math.abs(y) - innerY, 0);
+  return distanceX * distanceX + distanceY * distanceY <= cornerRadius * cornerRadius;
+}
+
+function traceBubblePath(context) {
+  context.moveTo(-0.73, -0.62);
+  context.bezierCurveTo(-0.9, -0.62, -0.96, -0.45, -0.96, -0.22);
+  context.lineTo(-0.96, 0.2);
+  context.bezierCurveTo(-0.96, 0.46, -0.81, 0.62, -0.59, 0.62);
+  context.lineTo(-0.24, 0.62);
+  context.bezierCurveTo(-0.14, 0.62, -0.08, 0.7, -0.08, 0.84);
+  context.bezierCurveTo(0.01, 0.75, 0.08, 0.67, 0.18, 0.62);
+  context.lineTo(0.69, 0.62);
+  context.bezierCurveTo(0.87, 0.62, 0.96, 0.44, 0.96, 0.2);
+  context.lineTo(0.96, -0.22);
+  context.bezierCurveTo(0.96, -0.45, 0.9, -0.62, 0.73, -0.62);
+  context.closePath();
+}
+
+function traceHeartPath(context) {
+  context.moveTo(0, 0.88);
+  context.bezierCurveTo(-0.16, 0.68, -0.86, 0.26, -0.86, -0.23);
+  context.bezierCurveTo(-0.86, -0.64, -0.35, -0.82, 0, -0.43);
+  context.bezierCurveTo(0.35, -0.82, 0.86, -0.64, 0.86, -0.23);
+  context.bezierCurveTo(0.86, 0.26, 0.16, 0.68, 0, 0.88);
+}
+
+function traceBookPath(context) {
+  context.moveTo(-0.92, -0.65);
+  context.bezierCurveTo(-0.57, -0.78, -0.23, -0.7, 0, -0.46);
+  context.bezierCurveTo(0.23, -0.7, 0.57, -0.78, 0.92, -0.65);
+  context.lineTo(0.92, 0.63);
+  context.bezierCurveTo(0.59, 0.52, 0.24, 0.57, 0, 0.78);
+  context.bezierCurveTo(-0.24, 0.57, -0.59, 0.52, -0.92, 0.63);
+}
+
+function tracePolygonPath(context, points) {
+  for (const [x, y] of points) {
+    if (x === points[0][0] && y === points[0][1]) context.moveTo(x, y);
+    else context.lineTo(x, y);
+  }
 }
 
 function isInsidePolygon(x, y, points) {

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { layoutWords } from "../lib/cloud-layout.mjs";
-import { getMaskBounds, traceMaskPath } from "../lib/masks.mjs";
+import { getMaskBounds, traceMaskDetail, traceMaskPath } from "../lib/masks.mjs";
 import {
   FONT_OPTIONS,
   PALETTE_OPTIONS,
@@ -195,6 +195,11 @@ function drawMaskOutline(context: CanvasRenderingContext2D, maskId: string, colo
   context.beginPath();
   traceMaskPath(context, maskId);
   context.stroke();
+  if (maskId === "book") {
+    context.beginPath();
+    traceMaskDetail(context, maskId);
+    context.stroke();
+  }
   context.restore();
 }
 

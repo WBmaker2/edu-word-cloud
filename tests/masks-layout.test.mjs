@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { MASK_IDS, getMaskBounds, isInsideMask } from "../app/lib/masks.mjs";
+import { MASK_IDS, getMaskBounds, isInsideMask, traceMaskPath } from "../app/lib/masks.mjs";
 import { layoutWords } from "../app/lib/cloud-layout.mjs";
 
 test("all five masks include the center and reject far corners", () => {
@@ -94,4 +94,21 @@ test("layout uses the same centered bounds as the canvas for every mask", () => 
       assert.equal(isInsideMask(maskId, word.nx, word.ny, width, height), true, `${maskId}: ${word.text}`);
     }
   }
+});
+
+test("refined masks use smooth paths and a vertically balanced book boundary", () => {
+  const commands = [];
+  const context = new Proxy({}, {
+    get: (_, method) => (...args) => commands.push([method, ...args]),
+  });
+
+  traceMaskPath(context, "bubble");
+  traceMaskPath(context, "heart");
+  traceMaskPath(context, "book");
+
+  assert.ok(commands.filter(([method]) => method === "bezierCurveTo").length >= 10);
+  const { halfWidth, halfHeight } = getMaskBounds("book", 1200, 500);
+  assert.ok(halfHeight / halfWidth > 0.65);
+  assert.equal(isInsideMask("book", 0, 0, 1200, 500), true);
+  assert.equal(isInsideMask("book", 0.6, 0, 1200, 500), false);
 });
