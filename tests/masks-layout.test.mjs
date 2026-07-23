@@ -58,7 +58,7 @@ test("layout places higher-weight words first when the input is unsorted", () =>
   assert.ok(Math.hypot(largest.nx, largest.ny) < Math.hypot(smallest.nx, smallest.ny));
 });
 
-test("layout keeps equal-weight words readable while fitting more of them", () => {
+test("layout shrinks equal-weight words enough to keep the selected count", () => {
   const words = Array.from({ length: 20 }, (_, index) => ({
     text: `단어${String(index + 1).padStart(2, "0")}`,
     count: 2,
@@ -72,8 +72,8 @@ test("layout keeps equal-weight words readable while fitting more of them", () =
     seed: "동점-교실",
   });
 
-  assert.ok(result.placed.every((word) => word.fontSize >= 56 && word.fontSize <= 64));
-  assert.ok(result.placed.length >= 15);
+  assert.equal(result.placed.length, words.length);
+  assert.ok(result.placed.every((word) => word.fontSize >= 30 && word.fontSize <= 60));
 });
 
 test("layout uses the same centered bounds as the canvas for every mask", () => {
@@ -90,6 +90,44 @@ test("layout uses the same centered bounds as the canvas for every mask", () => 
     assert.ok(bounds.halfWidth <= width / 2, maskId);
     assert.ok(bounds.halfHeight <= height / 2, maskId);
     const result = layoutWords({ words, maskId, width, height, seed: `마스크-${maskId}` });
+    for (const word of result.placed) {
+      assert.equal(isInsideMask(maskId, word.nx, word.ny, width, height), true, `${maskId}: ${word.text}`);
+    }
+  }
+});
+
+test("keeps the requested word count identical across every mask", () => {
+  const width = 1200;
+  const height = 500;
+  const words = Array.from({ length: 20 }, (_, index) => ({
+    text: `수업단어${String(index + 1).padStart(2, "0")}`,
+    count: 20 - index,
+    weight: 20 - index,
+  }));
+
+  for (const maskId of MASK_IDS) {
+    const result = layoutWords({ words, maskId, width, height, seed: `20개-${maskId}` });
+    assert.equal(result.placed.length, words.length, maskId);
+    assert.equal(result.omitted.length, 0, maskId);
+    for (const word of result.placed) {
+      assert.equal(isInsideMask(maskId, word.nx, word.ny, width, height), true, `${maskId}: ${word.text}`);
+    }
+  }
+});
+
+test("keeps one hundred requested words inside every mask", () => {
+  const width = 1200;
+  const height = 500;
+  const words = Array.from({ length: 100 }, (_, index) => ({
+    text: `수업단어${String(index + 1).padStart(3, "0")}`,
+    count: 100 - index,
+    weight: 100 - index,
+  }));
+
+  for (const maskId of MASK_IDS) {
+    const result = layoutWords({ words, maskId, width, height, seed: `100개-${maskId}` });
+    assert.equal(result.placed.length, words.length, maskId);
+    assert.equal(result.omitted.length, 0, maskId);
     for (const word of result.placed) {
       assert.equal(isInsideMask(maskId, word.nx, word.ny, width, height), true, `${maskId}: ${word.text}`);
     }

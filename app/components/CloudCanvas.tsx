@@ -165,7 +165,7 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
       />
       <div className="cloud-canvas__footer">
         {result ? (
-          <p id="cloud-summary">표시된 단어 {layout?.placed.length ?? 0}개 · 공간 부족으로 생략 {layout?.omitted.length ?? 0}개</p>
+          <p id="cloud-summary">표시된 단어 {layout?.placed.length ?? 0}개 · 모두 마스크 안에 배치했어요.</p>
         ) : (
           <p id="cloud-empty-message">텍스트를 붙여넣으면 여기에 결과가 나타나요.</p>
         )}

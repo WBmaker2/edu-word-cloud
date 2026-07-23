@@ -67,6 +67,8 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
   assert.match(settings, /이전 색상/);
   assert.match(settings, /다음 색상/);
   assert.match(settings, /ChevronIcon/);
+  assert.match(settings, /MaskIcon/);
+  assert.match(settings, /setting-icon--bubble/);
   assert.match(settings, /화살표를 처음 누르면 첫 색상부터 비교해요/);
   assert.match(settings, /aria-live="polite"/);
   for (const label of ["차분한 보라", "봄빛 파스텔"]) {
@@ -80,6 +82,8 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
   assert.match(dialog, /2026-07-19 — 교사용 워드 클라우드 사이트 첫 제작/);
   assert.match(dialog, /2026-07-23 — 선택한 마스크 안에 단어가 배치되도록/);
   assert.match(dialog, /현재 색상 이름과 첫 화살표의 비교 순서를 보여 주고/);
+  assert.match(dialog, /말풍선 마스크 버튼을 실제 말풍선처럼 보이는 아이콘으로 개선/);
+  assert.match(dialog, /마스크와 관계없이 선택한 모든 단어를 마스크 안에 배치하도록/);
   assert.match(settings, /linear-gradient\(135deg/);
   assert.match(studio, /localStorage\.setItem\("cloud-classroom-settings"/);
   for (const privateValue of ["text", "excluded", "keywords", "result"]) {

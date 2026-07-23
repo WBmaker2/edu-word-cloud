@@ -172,7 +172,7 @@ function SettingGroup({
               aria-label={`${label}: ${choice.label}`}
               onClick={() => onSelect(choice.id)}
             >
-              {kind === "mask" ? <span className="setting-icon" aria-hidden="true">{choice.glyph}</span> : null}
+              {kind === "mask" ? <MaskIcon maskId={choice.id} glyph={choice.glyph} /> : null}
               {kind === "palette" ? (
                 <span
                   className="palette-swatch"
@@ -190,4 +190,16 @@ function SettingGroup({
       <p className="setting-description">현재 선택: {selectedLabel}</p>
     </fieldset>
   );
+}
+
+function MaskIcon({ maskId, glyph }: { maskId: string; glyph?: string }) {
+  if (maskId === "bubble") {
+    return (
+      <svg className="setting-icon setting-icon--bubble" viewBox="0 0 32 28" aria-hidden="true" fill="currentColor">
+        <path d="M5.5 3.5h21A3.5 3.5 0 0 1 30 7v10a3.5 3.5 0 0 1-3.5 3.5H17l-5.6 4.2.8-4.2H5.5A3.5 3.5 0 0 1 2 17V7a3.5 3.5 0 0 1 3.5-3.5Z" />
+      </svg>
+    );
+  }
+
+  return <span className="setting-icon" aria-hidden="true">{glyph}</span>;
 }
