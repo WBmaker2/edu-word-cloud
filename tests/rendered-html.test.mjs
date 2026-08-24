@@ -29,6 +29,11 @@ test("server-renders the teacher word cloud classroom", async () => {
     "서버 저장 없음",
     "워드 클라우드 만들기",
     "업데이트 내역",
+    "마스크: 나비",
+    "마스크: 나뭇잎",
+    "마스크: 전구",
+    "마스크: 구름",
+    "2026-08-25 — 나비·나뭇잎·전구·구름 마스크와 선택 아이콘을 추가",
   ]) {
     assert.match(html, new RegExp(phrase));
   }

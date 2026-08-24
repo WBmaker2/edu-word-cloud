@@ -195,11 +195,8 @@ function drawMaskOutline(context: CanvasRenderingContext2D, maskId: string, colo
   context.beginPath();
   traceMaskPath(context, maskId);
   context.stroke();
-  if (maskId === "book") {
-    context.beginPath();
-    traceMaskDetail(context, maskId);
-    context.stroke();
-  }
+  context.beginPath();
+  if (traceMaskDetail(context, maskId)) context.stroke();
   context.restore();
 }
 

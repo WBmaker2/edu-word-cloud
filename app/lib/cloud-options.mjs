@@ -4,6 +4,10 @@ export const MASK_OPTIONS = [
   { id: "heart", label: "하트", glyph: "♥" },
   { id: "star", label: "별", glyph: "★" },
   { id: "book", label: "책", glyph: "▤" },
+  { id: "butterfly", label: "나비" },
+  { id: "leaf", label: "나뭇잎" },
+  { id: "lightbulb", label: "전구" },
+  { id: "cloud", label: "구름" },
 ];
 
 export const PALETTE_OPTIONS = [

@@ -147,7 +147,11 @@ export function WordCloudStudio() {
           <p className="privacy-notice">광고 없음 <span aria-hidden="true">·</span> 서버 저장 없음</p>
           <div>
             <button type="button" onClick={(event) => openDialog("help", event.currentTarget)}>도움말</button>
-            <button type="button" onClick={(event) => openDialog("updates", event.currentTarget)}>업데이트 내역</button>
+            <button
+              type="button"
+              data-latest-update="2026-08-25 — 나비·나뭇잎·전구·구름 마스크와 선택 아이콘을 추가"
+              onClick={(event) => openDialog("updates", event.currentTarget)}
+            >업데이트 내역</button>
           </div>
         </div>
       </header>

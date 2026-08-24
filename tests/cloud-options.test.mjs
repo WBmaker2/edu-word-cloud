@@ -4,7 +4,14 @@ import { DEFAULT_SETTINGS, MASK_OPTIONS, PALETTE_OPTIONS, WORD_COUNT_OPTIONS, no
 import { canMovePalette, getPaletteNavigationTarget } from "../app/lib/palette-navigation.mjs";
 
 test("offers the approved masks and word counts with forty as default", () => {
-  assert.deepEqual(MASK_OPTIONS.map(({ id }) => id), ["circle", "bubble", "heart", "star", "book"]);
+  assert.deepEqual(
+    MASK_OPTIONS.map(({ id, label }) => [id, label]),
+    [
+      ["circle", "원"], ["bubble", "말풍선"], ["heart", "하트"],
+      ["star", "별"], ["book", "책"], ["butterfly", "나비"],
+      ["leaf", "나뭇잎"], ["lightbulb", "전구"], ["cloud", "구름"],
+    ],
+  );
   assert.deepEqual(WORD_COUNT_OPTIONS, [20, 40, 60, 80, 100]);
   assert.equal(DEFAULT_SETTINGS.wordCount, 40);
 });
