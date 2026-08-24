@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CloudCanvas } from "./components/CloudCanvas";
-import { InfoDialog } from "./components/InfoDialog";
+import { InfoDialog, LATEST_UPDATE } from "./components/InfoDialog";
 import { QuickSettings } from "./components/QuickSettings";
 import { DEFAULT_SAMPLE_TEXT, TextWorkspace } from "./components/TextWorkspace";
 import { WordFrequency } from "./components/WordFrequency";
@@ -149,7 +149,7 @@ export function WordCloudStudio() {
             <button type="button" onClick={(event) => openDialog("help", event.currentTarget)}>도움말</button>
             <button
               type="button"
-              data-latest-update="2026-08-25 — 나비·나뭇잎·전구·구름 마스크와 선택 아이콘을 추가"
+              title={LATEST_UPDATE}
               onClick={(event) => openDialog("updates", event.currentTarget)}
             >업데이트 내역</button>
           </div>

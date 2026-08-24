@@ -37,6 +37,14 @@ test("server-renders the teacher word cloud classroom", async () => {
   ]) {
     assert.match(html, new RegExp(phrase));
   }
+  for (const maskId of ["butterfly", "leaf", "lightbulb", "cloud"]) {
+    assert.match(
+      html,
+      new RegExp(`<svg class="setting-icon setting-icon--${maskId}"[^>]*\\bwidth="32"[^>]*\\bheight="28"`),
+    );
+  }
+  assert.match(html, /<button[^>]*title="2026-08-25 — 나비·나뭇잎·전구·구름 마스크와 선택 아이콘을 추가"/);
+  assert.doesNotMatch(html, /data-latest-update/);
   for (const starterMarker of [
     "codex-preview",
     "react-loading-skeleton",

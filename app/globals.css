@@ -127,6 +127,7 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   .setting-group { border-right: 0; border-bottom: 1px solid var(--line); }
   .setting-group:last-child { border-bottom: 0; }
   .setting-group { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .setting-options--mask { width: 100%; max-width: 100%; }
   .setting-group--palette { gap: 8px; }
   .setting-group--palette .setting-options { flex-wrap: wrap; }
   .palette-navigation { margin-left: 0; }
