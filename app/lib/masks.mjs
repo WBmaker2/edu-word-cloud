@@ -1,4 +1,4 @@
-export const MASK_IDS = ["circle", "bubble", "heart", "star", "book"];
+export const MASK_IDS = ["circle", "bubble", "heart", "star", "book", "butterfly", "leaf", "lightbulb", "cloud"];
 
 const STAR_POINTS = Array.from({ length: 10 }, (_, index) => {
   const angle = -Math.PI / 2 + index * (Math.PI / 5);
@@ -11,6 +11,10 @@ export function getMaskBounds(maskId, width, height) {
 
   if (maskId === "bubble") return { halfWidth: width * 0.39, halfHeight: height * 0.36 };
   if (maskId === "book") return { halfWidth: width * 0.25, halfHeight: height * 0.42 };
+  if (maskId === "butterfly") return { halfWidth: width * 0.31, halfHeight: height * 0.42 };
+  if (maskId === "leaf") return { halfWidth: width * 0.31, halfHeight: height * 0.34 };
+  if (maskId === "lightbulb") return { halfWidth: shortSide * 0.34, halfHeight: shortSide * 0.44 };
+  if (maskId === "cloud") return { halfWidth: width * 0.34, halfHeight: height * 0.34 };
   return { halfWidth: shortSide * 0.44, halfHeight: shortSide * 0.44 };
 }
 
@@ -41,6 +45,10 @@ function isInsideLocalMask(maskId, localX, localY) {
     const bottom = 0.78 - 0.15 * pageWidth ** 1.7;
     return pageWidth <= 1 && localY >= top && localY <= bottom;
   }
+  if (maskId === "butterfly") return isInsideButterfly(localX, localY);
+  if (maskId === "leaf") return Math.abs(localY) <= 0.68 * (1 - Math.abs(localX) ** 1.65);
+  if (maskId === "lightbulb") return isInsideLightbulb(localX, localY);
+  if (maskId === "cloud") return isInsideCloud(localX, localY);
   return false;
 }
 
@@ -51,6 +59,14 @@ export function traceMaskPath(context, maskId) {
     traceBubblePath(context);
   } else if (maskId === "heart") {
     traceHeartPath(context);
+  } else if (maskId === "butterfly") {
+    traceButterflyPath(context);
+  } else if (maskId === "leaf") {
+    traceLeafPath(context);
+  } else if (maskId === "lightbulb") {
+    traceLightbulbPath(context);
+  } else if (maskId === "cloud") {
+    traceCloudPath(context);
   } else if (maskId === "book") {
     traceBookPath(context);
   } else {
@@ -60,10 +76,49 @@ export function traceMaskPath(context, maskId) {
 }
 
 export function traceMaskDetail(context, maskId) {
-  if (maskId !== "book") return;
+  if (maskId === "leaf") {
+    context.moveTo(0, -0.68);
+    context.bezierCurveTo(-0.03, -0.28, -0.03, 0.28, 0, 0.68);
+    return true;
+  }
+  if (maskId === "lightbulb") {
+    context.moveTo(-0.3, 0.5);
+    context.lineTo(0.3, 0.5);
+    context.moveTo(-0.26, 0.62);
+    context.lineTo(0.26, 0.62);
+    return true;
+  }
+  if (maskId !== "book") return false;
 
   context.moveTo(0, -0.46);
   context.bezierCurveTo(-0.02, -0.1, -0.02, 0.44, 0, 0.78);
+  return true;
+}
+
+function isInsideEllipse(x, y, centerX, centerY, radiusX, radiusY) {
+  return ((x - centerX) / radiusX) ** 2 + ((y - centerY) / radiusY) ** 2 <= 1;
+}
+
+function isInsideButterfly(x, y) {
+  return isInsideEllipse(x, y, -0.4, -0.28, 0.54, 0.58)
+    || isInsideEllipse(x, y, 0.4, -0.28, 0.54, 0.58)
+    || isInsideEllipse(x, y, -0.38, 0.31, 0.5, 0.56)
+    || isInsideEllipse(x, y, 0.38, 0.31, 0.5, 0.56)
+    || isInsideEllipse(x, y, 0, 0, 0.16, 0.82);
+}
+
+function isInsideLightbulb(x, y) {
+  const bulb = isInsideEllipse(x, y, 0, -0.2, 0.78, 0.76);
+  const neck = isInsideEllipse(x, y, 0, 0.34, 0.4, 0.58);
+  const socket = Math.abs(x) <= 0.32 && y >= 0.52 && y <= 0.88;
+  return bulb || neck || socket;
+}
+
+function isInsideCloud(x, y) {
+  return isInsideEllipse(x, y, 0, 0.12, 0.84, 0.6)
+    || isInsideEllipse(x, y, 0, -0.36, 0.64, 0.68)
+    || isInsideEllipse(x, y, -0.55, -0.1, 0.46, 0.48)
+    || isInsideEllipse(x, y, 0.55, -0.1, 0.46, 0.48);
 }
 
 function isInsideTriangle(x, y, [ax, ay], [bx, by], [cx, cy]) {
@@ -104,6 +159,54 @@ function traceHeartPath(context) {
   context.bezierCurveTo(-0.86, -0.64, -0.35, -0.82, 0, -0.43);
   context.bezierCurveTo(0.35, -0.82, 0.86, -0.64, 0.86, -0.23);
   context.bezierCurveTo(0.86, 0.26, 0.16, 0.68, 0, 0.88);
+}
+
+function traceButterflyPath(context) {
+  context.moveTo(0, -0.82);
+  context.bezierCurveTo(-0.2, -0.73, -0.35, -0.84, -0.6, -0.86);
+  context.bezierCurveTo(-0.91, -0.88, -1, -0.6, -0.94, -0.33);
+  context.bezierCurveTo(-0.89, -0.1, -0.7, -0.02, -0.51, 0.05);
+  context.bezierCurveTo(-0.78, 0.14, -0.98, 0.4, -0.88, 0.68);
+  context.bezierCurveTo(-0.77, 0.93, -0.42, 0.85, -0.17, 0.58);
+  context.bezierCurveTo(-0.08, 0.7, -0.03, 0.84, 0, 0.9);
+  context.bezierCurveTo(0.03, 0.84, 0.08, 0.7, 0.17, 0.58);
+  context.bezierCurveTo(0.42, 0.85, 0.77, 0.93, 0.88, 0.68);
+  context.bezierCurveTo(0.98, 0.4, 0.78, 0.14, 0.51, 0.05);
+  context.bezierCurveTo(0.7, -0.02, 0.89, -0.1, 0.94, -0.33);
+  context.bezierCurveTo(1, -0.6, 0.91, -0.88, 0.6, -0.86);
+  context.bezierCurveTo(0.35, -0.84, 0.2, -0.73, 0, -0.82);
+}
+
+function traceLeafPath(context) {
+  context.moveTo(0, -0.72);
+  context.bezierCurveTo(-0.42, -0.66, -0.86, -0.33, -1, 0);
+  context.bezierCurveTo(-0.86, 0.33, -0.42, 0.66, 0, 0.72);
+  context.bezierCurveTo(0.42, 0.66, 0.86, 0.33, 1, 0);
+  context.bezierCurveTo(0.86, -0.33, 0.42, -0.66, 0, -0.72);
+}
+
+function traceLightbulbPath(context) {
+  context.moveTo(0, -0.96);
+  context.bezierCurveTo(-0.5, -0.96, -0.82, -0.62, -0.82, -0.2);
+  context.bezierCurveTo(-0.82, 0.12, -0.66, 0.29, -0.46, 0.47);
+  context.bezierCurveTo(-0.36, 0.56, -0.34, 0.64, -0.31, 0.7);
+  context.lineTo(-0.34, 0.9);
+  context.lineTo(0.34, 0.9);
+  context.lineTo(0.34, 0.7);
+  context.bezierCurveTo(0.34, 0.64, 0.36, 0.56, 0.46, 0.47);
+  context.bezierCurveTo(0.66, 0.29, 0.82, 0.12, 0.82, -0.2);
+  context.bezierCurveTo(0.82, -0.62, 0.5, -0.96, 0, -0.96);
+}
+
+function traceCloudPath(context) {
+  context.moveTo(-0.88, 0.54);
+  context.bezierCurveTo(-1, 0.36, -0.94, 0.05, -0.72, -0.03);
+  context.bezierCurveTo(-0.78, -0.35, -0.56, -0.62, -0.28, -0.58);
+  context.bezierCurveTo(-0.18, -0.92, -0.08, -1, 0, -0.98);
+  context.bezierCurveTo(0.08, -1, 0.2, -0.92, 0.32, -0.62);
+  context.bezierCurveTo(0.62, -0.7, 0.83, -0.46, 0.8, -0.18);
+  context.bezierCurveTo(1, -0.08, 1, 0.32, 0.84, 0.54);
+  context.bezierCurveTo(0.62, 0.74, -0.61, 0.74, -0.88, 0.54);
 }
 
 function traceBookPath(context) {

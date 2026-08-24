@@ -1,13 +1,31 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { MASK_IDS, getMaskBounds, isInsideMask, traceMaskPath } from "../app/lib/masks.mjs";
+import { MASK_IDS, getMaskBounds, isInsideMask, traceMaskDetail, traceMaskPath } from "../app/lib/masks.mjs";
 import { layoutWords } from "../app/lib/cloud-layout.mjs";
 
-test("all five masks include the center and reject far corners", () => {
-  assert.deepEqual(MASK_IDS, ["circle", "bubble", "heart", "star", "book"]);
+test("all classroom masks include the center and reject far corners", () => {
+  assert.deepEqual(MASK_IDS, ["circle", "bubble", "heart", "star", "book", "butterfly", "leaf", "lightbulb", "cloud"]);
   for (const mask of MASK_IDS) {
     assert.equal(isInsideMask(mask, 0, 0), true, mask);
     assert.equal(isInsideMask(mask, 0.99, 0.99), false, mask);
+  }
+});
+
+test("new classroom masks expose recognizable connected interiors", () => {
+  const width = 1200;
+  const height = 500;
+  const insidePoints = {
+    butterfly: [[0, 0], [-0.24, -0.18], [0.24, -0.18], [-0.2, 0.22], [0.2, 0.22]],
+    leaf: [[0, 0], [-0.45, 0], [0.45, 0]],
+    lightbulb: [[0, -0.28], [0, 0], [0, 0.58]],
+    cloud: [[0, -0.32], [-0.42, 0], [0.42, 0], [0, 0.3]],
+  };
+
+  for (const [maskId, points] of Object.entries(insidePoints)) {
+    for (const [x, y] of points) {
+      assert.equal(isInsideMask(maskId, x, y, width, height), true, `${maskId}: ${x},${y}`);
+    }
+    assert.equal(isInsideMask(maskId, 0.9, 0.9, width, height), false, maskId);
   }
 });
 
@@ -149,4 +167,30 @@ test("refined masks use smooth paths and a vertically balanced book boundary", (
   assert.ok(halfHeight / halfWidth > 0.65);
   assert.equal(isInsideMask("book", 0, 0, 1200, 500), true);
   assert.equal(isInsideMask("book", 0.6, 0, 1200, 500), false);
+});
+
+test("mask details report only the leaf vein, bulb socket, and book binding", () => {
+  const detailCommands = (maskId) => {
+    const commands = [];
+    const context = new Proxy({}, {
+      get: (_, method) => (...args) => commands.push([method, ...args]),
+    });
+    const result = traceMaskDetail(context, maskId);
+    return { commands, result };
+  };
+
+  const leaf = detailCommands("leaf");
+  assert.equal(leaf.result, true);
+  assert.ok(leaf.commands.length > 0);
+  const lightbulb = detailCommands("lightbulb");
+  assert.equal(lightbulb.result, true);
+  assert.ok(lightbulb.commands.length > 0);
+  const book = detailCommands("book");
+  assert.equal(book.result, true);
+  assert.ok(book.commands.length > 0);
+  for (const maskId of ["circle", "bubble", "heart", "star", "butterfly", "cloud"]) {
+    const detail = detailCommands(maskId);
+    assert.equal(detail.result, false, maskId);
+    assert.deepEqual(detail.commands, [], maskId);
+  }
 });
