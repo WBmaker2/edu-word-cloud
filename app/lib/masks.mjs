@@ -162,8 +162,8 @@ function traceHeartPath(context) {
 }
 
 function traceButterflyPath(context) {
-  context.moveTo(0, -0.82);
-  context.bezierCurveTo(-0.2, -0.73, -0.35, -0.84, -0.6, -0.86);
+  context.moveTo(0, -0.9);
+  context.bezierCurveTo(-0.2, -0.78, -0.42, -0.94, -0.62, -0.92);
   context.bezierCurveTo(-0.91, -0.88, -1, -0.6, -0.94, -0.33);
   context.bezierCurveTo(-0.89, -0.1, -0.7, -0.02, -0.51, 0.05);
   context.bezierCurveTo(-0.78, 0.14, -0.98, 0.4, -0.88, 0.68);
@@ -174,7 +174,7 @@ function traceButterflyPath(context) {
   context.bezierCurveTo(0.98, 0.4, 0.78, 0.14, 0.51, 0.05);
   context.bezierCurveTo(0.7, -0.02, 0.89, -0.1, 0.94, -0.33);
   context.bezierCurveTo(1, -0.6, 0.91, -0.88, 0.6, -0.86);
-  context.bezierCurveTo(0.35, -0.84, 0.2, -0.73, 0, -0.82);
+  context.bezierCurveTo(0.42, -0.94, 0.2, -0.78, 0, -0.9);
 }
 
 function traceLeafPath(context) {
@@ -202,11 +202,11 @@ function traceCloudPath(context) {
   context.moveTo(-0.88, 0.54);
   context.bezierCurveTo(-1, 0.36, -0.94, 0.05, -0.72, -0.03);
   context.bezierCurveTo(-0.78, -0.35, -0.56, -0.62, -0.28, -0.58);
-  context.bezierCurveTo(-0.18, -0.92, -0.08, -1, 0, -0.98);
-  context.bezierCurveTo(0.08, -1, 0.2, -0.92, 0.32, -0.62);
+  context.bezierCurveTo(-0.18, -1.06, -0.08, -1.1, 0, -1.08);
+  context.bezierCurveTo(0.08, -1.1, 0.2, -1.06, 0.32, -0.62);
   context.bezierCurveTo(0.62, -0.7, 0.83, -0.46, 0.8, -0.18);
   context.bezierCurveTo(1, -0.08, 1, 0.32, 0.84, 0.54);
-  context.bezierCurveTo(0.62, 0.74, -0.61, 0.74, -0.88, 0.54);
+  context.bezierCurveTo(0.62, 0.82, -0.61, 0.82, -0.88, 0.54);
 }
 
 function traceBookPath(context) {

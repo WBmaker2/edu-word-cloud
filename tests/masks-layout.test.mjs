@@ -194,3 +194,69 @@ test("mask details report only the leaf vein, bulb socket, and book binding", ()
     assert.deepEqual(detail.commands, [], maskId);
   }
 });
+
+test("new mask paths are closed and contain sampled internal boundary points", () => {
+  const width = 1200;
+  const height = 500;
+  const samples = {
+    butterfly: [[-0.4, -0.855], [0.4, -0.855], [-0.8, 0.3], [0.8, 0.3]],
+    leaf: [[0, -0.67], [0, 0.67], [-0.98, 0], [0.98, 0]],
+    lightbulb: [[0, -0.95], [-0.3, 0.87], [0.3, 0.87]],
+    cloud: [[0, -0.99], [-0.8, 0.3], [0.8, 0.3], [0, 0.7]],
+  };
+
+  for (const [maskId, points] of Object.entries(samples)) {
+    const commands = [];
+    const context = new Proxy({}, {
+      get: (_, method) => (...args) => commands.push([method, ...args]),
+    });
+    traceMaskPath(context, maskId);
+    assert.ok(commands.some(([method]) => method === "bezierCurveTo"), `${maskId}: bezier path`);
+    assert.equal(commands.at(-1)?.[0], "closePath", `${maskId}: closed path`);
+
+    const bounds = getMaskBounds(maskId, width, height);
+    const polygon = flattenPath(commands);
+    for (const [localX, localY] of points) {
+      const x = localX * (2 * bounds.halfWidth) / width;
+      const y = localY * (2 * bounds.halfHeight) / height;
+      assert.equal(isInsideMask(maskId, x, y, width, height), true, `${maskId}: internal sample`);
+      assert.equal(isPointInPolygon(localX, localY, polygon), true, `${maskId}: path containment`);
+    }
+  }
+});
+
+function flattenPath(commands) {
+  const points = [];
+  let current = null;
+  for (const [method, ...args] of commands) {
+    if (method === "moveTo" || method === "lineTo") {
+      current = [args[0], args[1]];
+      points.push(current);
+    } else if (method === "bezierCurveTo" && current) {
+      const [control1X, control1Y, control2X, control2Y, endX, endY] = args;
+      const [startX, startY] = current;
+      for (let step = 1; step <= 24; step += 1) {
+        const t = step / 24;
+        const inverse = 1 - t;
+        points.push([
+          inverse ** 3 * startX + 3 * inverse ** 2 * t * control1X + 3 * inverse * t ** 2 * control2X + t ** 3 * endX,
+          inverse ** 3 * startY + 3 * inverse ** 2 * t * control1Y + 3 * inverse * t ** 2 * control2Y + t ** 3 * endY,
+        ]);
+      }
+      current = [endX, endY];
+    }
+  }
+  return points;
+}
+
+function isPointInPolygon(x, y, points) {
+  let inside = false;
+  for (let index = 0, previous = points.length - 1; index < points.length; previous = index, index += 1) {
+    const [currentX, currentY] = points[index];
+    const [previousX, previousY] = points[previous];
+    const crossesRay = (currentY > y) !== (previousY > y)
+      && x < ((previousX - currentX) * (y - currentY)) / (previousY - currentY) + currentX;
+    if (crossesRay) inside = !inside;
+  }
+  return inside;
+}
