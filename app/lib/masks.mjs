@@ -100,16 +100,16 @@ function isInsideEllipse(x, y, centerX, centerY, radiusX, radiusY) {
 }
 
 function isInsideButterfly(x, y) {
-  return isInsideEllipse(x, y, -0.4, -0.28, 0.54, 0.58)
-    || isInsideEllipse(x, y, 0.4, -0.28, 0.54, 0.58)
-    || isInsideEllipse(x, y, -0.38, 0.31, 0.5, 0.56)
-    || isInsideEllipse(x, y, 0.38, 0.31, 0.5, 0.56)
+  return isInsideEllipse(x, y, -0.4, -0.28, 0.4, 0.58)
+    || isInsideEllipse(x, y, 0.4, -0.28, 0.4, 0.58)
+    || isInsideEllipse(x, y, -0.38, 0.31, 0.4, 0.56)
+    || isInsideEllipse(x, y, 0.38, 0.31, 0.4, 0.56)
     || isInsideEllipse(x, y, 0, 0, 0.16, 0.82);
 }
 
 function isInsideLightbulb(x, y) {
   const bulb = isInsideEllipse(x, y, 0, -0.2, 0.78, 0.76);
-  const neck = isInsideEllipse(x, y, 0, 0.34, 0.4, 0.58);
+  const neck = isInsideEllipse(x, y, 0, 0.34, 0.4, 0.54);
   const socket = Math.abs(x) <= 0.32 && y >= 0.52 && y <= 0.88;
   return bulb || neck || socket;
 }
@@ -117,8 +117,8 @@ function isInsideLightbulb(x, y) {
 function isInsideCloud(x, y) {
   return isInsideEllipse(x, y, 0, 0.12, 0.84, 0.6)
     || isInsideEllipse(x, y, 0, -0.36, 0.64, 0.68)
-    || isInsideEllipse(x, y, -0.55, -0.1, 0.46, 0.48)
-    || isInsideEllipse(x, y, 0.55, -0.1, 0.46, 0.48);
+    || isInsideEllipse(x, y, -0.55, -0.1, 0.32, 0.48)
+    || isInsideEllipse(x, y, 0.55, -0.1, 0.32, 0.48);
 }
 
 function isInsideTriangle(x, y, [ax, ay], [bx, by], [cx, cy]) {
@@ -162,19 +162,15 @@ function traceHeartPath(context) {
 }
 
 function traceButterflyPath(context) {
-  context.moveTo(0, -0.9);
-  context.bezierCurveTo(-0.2, -0.78, -0.42, -0.94, -0.62, -0.92);
-  context.bezierCurveTo(-0.91, -0.88, -1, -0.6, -0.94, -0.33);
-  context.bezierCurveTo(-0.89, -0.1, -0.7, -0.02, -0.51, 0.05);
-  context.bezierCurveTo(-0.78, 0.14, -0.98, 0.4, -0.88, 0.68);
-  context.bezierCurveTo(-0.77, 0.93, -0.42, 0.85, -0.17, 0.58);
-  context.bezierCurveTo(-0.08, 0.7, -0.03, 0.84, 0, 0.9);
-  context.bezierCurveTo(0.03, 0.84, 0.08, 0.7, 0.17, 0.58);
-  context.bezierCurveTo(0.42, 0.85, 0.77, 0.93, 0.88, 0.68);
-  context.bezierCurveTo(0.98, 0.4, 0.78, 0.14, 0.51, 0.05);
-  context.bezierCurveTo(0.7, -0.02, 0.89, -0.1, 0.94, -0.33);
-  context.bezierCurveTo(1, -0.6, 0.91, -0.88, 0.6, -0.86);
-  context.bezierCurveTo(0.42, -0.94, 0.2, -0.78, 0, -0.9);
+  context.moveTo(0, -0.88);
+  context.bezierCurveTo(-0.22, -0.95, -0.62, -0.98, -0.86, -0.78);
+  context.bezierCurveTo(-1.02, -0.62, -1.02, -0.18, -0.82, 0.02);
+  context.bezierCurveTo(-1.05, 0.22, -1.02, 0.62, -0.78, 0.82);
+  context.bezierCurveTo(-0.55, 1, -0.2, 0.95, 0, 0.84);
+  context.bezierCurveTo(0.2, 0.95, 0.55, 1, 0.78, 0.82);
+  context.bezierCurveTo(1.02, 0.62, 1.05, 0.22, 0.82, 0.02);
+  context.bezierCurveTo(1.02, -0.18, 1.02, -0.62, 0.86, -0.78);
+  context.bezierCurveTo(0.62, -0.98, 0.22, -0.95, 0, -0.88);
 }
 
 function traceLeafPath(context) {
@@ -189,22 +185,22 @@ function traceLightbulbPath(context) {
   context.moveTo(0, -0.96);
   context.bezierCurveTo(-0.5, -0.96, -0.82, -0.62, -0.82, -0.2);
   context.bezierCurveTo(-0.82, 0.12, -0.66, 0.29, -0.46, 0.47);
-  context.bezierCurveTo(-0.36, 0.56, -0.34, 0.64, -0.31, 0.7);
-  context.lineTo(-0.34, 0.9);
-  context.lineTo(0.34, 0.9);
-  context.lineTo(0.34, 0.7);
-  context.bezierCurveTo(0.34, 0.64, 0.36, 0.56, 0.46, 0.47);
+  context.bezierCurveTo(-0.4, 0.56, -0.4, 0.64, -0.38, 0.7);
+  context.lineTo(-0.4, 0.9);
+  context.lineTo(0.4, 0.9);
+  context.lineTo(0.4, 0.7);
+  context.bezierCurveTo(0.4, 0.64, 0.4, 0.56, 0.46, 0.47);
   context.bezierCurveTo(0.66, 0.29, 0.82, 0.12, 0.82, -0.2);
   context.bezierCurveTo(0.82, -0.62, 0.5, -0.96, 0, -0.96);
 }
 
 function traceCloudPath(context) {
   context.moveTo(-0.88, 0.54);
-  context.bezierCurveTo(-1, 0.36, -0.94, 0.05, -0.72, -0.03);
-  context.bezierCurveTo(-0.78, -0.35, -0.56, -0.62, -0.28, -0.58);
-  context.bezierCurveTo(-0.18, -1.06, -0.08, -1.1, 0, -1.08);
-  context.bezierCurveTo(0.08, -1.1, 0.2, -1.06, 0.32, -0.62);
-  context.bezierCurveTo(0.62, -0.7, 0.83, -0.46, 0.8, -0.18);
+  context.bezierCurveTo(-1, 0.36, -0.98, 0.05, -0.9, -0.03);
+  context.bezierCurveTo(-1.1, -0.35, -1.1, -0.7, -0.6, -0.85);
+  context.bezierCurveTo(-0.34, -1.1, -0.1, -1.12, 0, -1.08);
+  context.bezierCurveTo(0.1, -1.12, 0.34, -1.1, 0.6, -0.85);
+  context.bezierCurveTo(0.62, -0.7, 1.1, -0.62, 0.9, -0.03);
   context.bezierCurveTo(1, -0.08, 1, 0.32, 0.84, 0.54);
   context.bezierCurveTo(0.62, 0.82, -0.61, 0.82, -0.88, 0.54);
 }

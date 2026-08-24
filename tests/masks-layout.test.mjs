@@ -199,7 +199,7 @@ test("new mask paths are closed and contain sampled internal boundary points", (
   const width = 1200;
   const height = 500;
   const samples = {
-    butterfly: [[-0.4, -0.855], [0.4, -0.855], [-0.8, 0.3], [0.8, 0.3]],
+    butterfly: [[-0.4, -0.855], [0.4, -0.855], [-0.72, 0.3], [0.72, 0.3]],
     leaf: [[0, -0.67], [0, 0.67], [-0.98, 0], [0.98, 0]],
     lightbulb: [[0, -0.95], [-0.3, 0.87], [0.3, 0.87]],
     cloud: [[0, -0.99], [-0.8, 0.3], [0.8, 0.3], [0, 0.7]],
@@ -221,6 +221,18 @@ test("new mask paths are closed and contain sampled internal boundary points", (
       const y = localY * (2 * bounds.halfHeight) / height;
       assert.equal(isInsideMask(maskId, x, y, width, height), true, `${maskId}: internal sample`);
       assert.equal(isPointInPolygon(localX, localY, polygon), true, `${maskId}: path containment`);
+    }
+
+    for (let xIndex = -100; xIndex <= 100; xIndex += 1) {
+      for (let yIndex = -100; yIndex <= 100; yIndex += 1) {
+        const localX = xIndex / 100;
+        const localY = yIndex / 100;
+        const x = localX * (2 * bounds.halfWidth) / width;
+        const y = localY * (2 * bounds.halfHeight) / height;
+        if (isInsideMask(maskId, x, y, width, height)) {
+          assert.equal(isPointInPolygon(localX, localY, polygon), true, `${maskId}: dense containment ${localX},${localY}`);
+        }
+      }
     }
   }
 });
@@ -254,9 +266,22 @@ function isPointInPolygon(x, y, points) {
   for (let index = 0, previous = points.length - 1; index < points.length; previous = index, index += 1) {
     const [currentX, currentY] = points[index];
     const [previousX, previousY] = points[previous];
+    if (isPointOnSegment(x, y, previousX, previousY, currentX, currentY)) return true;
     const crossesRay = (currentY > y) !== (previousY > y)
       && x < ((previousX - currentX) * (y - currentY)) / (previousY - currentY) + currentX;
     if (crossesRay) inside = !inside;
   }
   return inside;
+}
+
+function isPointOnSegment(x, y, startX, startY, endX, endY) {
+  const segmentX = endX - startX;
+  const segmentY = endY - startY;
+  const lengthSquared = segmentX ** 2 + segmentY ** 2;
+  const projection = lengthSquared === 0
+    ? 0
+    : Math.max(0, Math.min(1, ((x - startX) * segmentX + (y - startY) * segmentY) / lengthSquared));
+  const closestX = startX + projection * segmentX;
+  const closestY = startY + projection * segmentY;
+  return Math.hypot(x - closestX, y - closestY) <= 0.0001;
 }
