@@ -169,7 +169,7 @@ test("refined masks use smooth paths and a vertically balanced book boundary", (
   assert.equal(isInsideMask("book", 0.6, 0, 1200, 500), false);
 });
 
-test("mask details report only the leaf vein, bulb socket, and book binding", () => {
+test("mask details report butterfly body and antennae alongside leaf, bulb, and book details", () => {
   const detailCommands = (maskId) => {
     const commands = [];
     const context = new Proxy({}, {
@@ -188,7 +188,11 @@ test("mask details report only the leaf vein, bulb socket, and book binding", ()
   const book = detailCommands("book");
   assert.equal(book.result, true);
   assert.ok(book.commands.length > 0);
-  for (const maskId of ["circle", "bubble", "heart", "star", "butterfly", "cloud"]) {
+  const butterfly = detailCommands("butterfly");
+  assert.equal(butterfly.result, true);
+  assert.ok(butterfly.commands.filter(([method]) => method === "moveTo").length >= 3);
+  assert.ok(butterfly.commands.filter(([method]) => method === "bezierCurveTo").length >= 3);
+  for (const maskId of ["circle", "bubble", "heart", "star", "cloud"]) {
     const detail = detailCommands(maskId);
     assert.equal(detail.result, false, maskId);
     assert.deepEqual(detail.commands, [], maskId);

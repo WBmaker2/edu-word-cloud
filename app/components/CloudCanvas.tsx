@@ -196,7 +196,10 @@ function drawMaskOutline(context: CanvasRenderingContext2D, maskId: string, colo
   traceMaskPath(context, maskId);
   context.stroke();
   context.beginPath();
-  if (traceMaskDetail(context, maskId)) context.stroke();
+  if (traceMaskDetail(context, maskId)) {
+    context.globalAlpha = 0.5;
+    context.stroke();
+  }
   context.restore();
 }
 

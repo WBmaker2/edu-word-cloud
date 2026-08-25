@@ -76,6 +76,18 @@ export function traceMaskPath(context, maskId) {
 }
 
 export function traceMaskDetail(context, maskId) {
+  if (maskId === "butterfly") {
+    context.moveTo(-0.08, -0.25);
+    context.bezierCurveTo(-0.12, -0.12, -0.12, 0.42, -0.08, 0.58);
+    context.bezierCurveTo(-0.04, 0.68, 0.04, 0.68, 0.08, 0.58);
+    context.bezierCurveTo(0.12, 0.42, 0.12, -0.12, 0.08, -0.25);
+    context.bezierCurveTo(0.04, -0.34, -0.04, -0.34, -0.08, -0.25);
+    context.moveTo(-0.05, -0.23);
+    context.bezierCurveTo(-0.11, -0.36, -0.18, -0.43, -0.24, -0.46);
+    context.moveTo(0.05, -0.23);
+    context.bezierCurveTo(0.11, -0.36, 0.18, -0.43, 0.24, -0.46);
+    return true;
+  }
   if (maskId === "leaf") {
     context.moveTo(-0.42, 0.62);
     context.bezierCurveTo(-0.1, 0.28, 0.18, -0.14, 0.38, -0.62);
