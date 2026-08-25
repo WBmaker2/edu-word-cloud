@@ -23,6 +23,19 @@
 - 변경하는 모든 코드 파일은 500줄 미만을 유지한다.
 - 테스트는 실제 마스크 판정·배치·서버 렌더링 결과를 검증하며 테스트 전용 production API나 외부 mock을 추가하지 않는다.
 
+## Visual Redesign Addendum — 2026-08-25 User Review
+
+첫 구현은 기능·배치 안정성은 충족했지만, 실제 모바일 화면 검토에서 새 네 마스크가 딱딱하고 장식성이 부족하다는 사용자 피드백을 받았다. 아래 미술 방향을 같은 기하·Canvas·SVG 구조 안에서 다시 구현한다.
+
+- 공통 스타일은 **초등학생용 동화책 스티커**처럼 통통하고 둥근 실루엣, 큰 덩어리, 부드러운 곡선으로 통일한다.
+- 나비는 위쪽 큰 하트형 날개와 아래쪽 작은 물방울형 날개, 둥근 몸통과 짧은 더듬이로 구성한다. 날개 사이의 움푹한 부분은 얕게 하여 단어 배치 면적을 확보한다.
+- 나뭇잎은 수평 렌즈가 아니라 오른쪽 위로 살짝 기울어진 통통한 잎과 짧은 줄기로 만든다. 잎맥은 굵지 않은 곡선 한 줄과 짧은 가지선으로 표현한다.
+- 전구는 큰 둥근 유리구, 잘록한 목, 모서리가 둥근 소켓으로 만든다. 소켓선과 작은 하트형 필라멘트로 친근함을 더하되 단어 가독성을 방해하지 않는다.
+- 구름은 크기가 다른 네 개의 몽글한 봉우리와 살짝 볼록한 밑면으로 만든다. 뾰족한 꼭짓점과 지나치게 평평한 사각형 인상을 피한다.
+- 선택 아이콘은 `36×30` 안에서 실제 마스크와 같은 비율을 쓰고, 흰색/배경색 세부선을 제한적으로 넣어 작은 크기에서도 대상을 구별할 수 있게 한다.
+- 실제 Canvas 외곽선과 내부 판정은 계속 보수적으로 일치해야 하며, 네 마스크 모두 100개 단어 배치 계약을 유지한다.
+- 모바일 390px에서 아홉 버튼은 잘림 없이 줄바꿈되고, 네 새 아이콘은 최소 32px의 시각 폭을 유지한다.
+
 ---
 
 ### Task 1: 네 마스크의 기하와 단어 배치 계약
@@ -231,4 +244,43 @@
   ```bash
   git add app/lib/cloud-options.mjs app/components/QuickSettings.tsx app/components/CloudCanvas.tsx app/globals.css app/components/InfoDialog.tsx tests/cloud-options.test.mjs tests/rendered-html.test.mjs
   git commit -m "feat: expose four new classroom masks"
+  ```
+
+---
+
+### Task 3: 사용자 피드백 기반 플레이풀 마스크 재디자인
+
+**Files:**
+- Modify: `tests/masks-layout.test.mjs`
+- Modify: `tests/rendered-html.test.mjs`
+- Modify: `app/lib/masks.mjs`
+- Modify: `app/components/QuickSettings.tsx`
+- Modify: `app/globals.css`
+- Modify: `app/components/InfoDialog.tsx`
+
+- [ ] **Step 1: 새 실루엣의 시각적 특징을 고정하는 실패 테스트 작성**
+
+  기존 중심·100단어 계약에 더해 나비의 상·하 날개, 기울어진 잎의 축, 전구의 넓은 유리구와 좁은 소켓, 구름의 좌우 봉우리를 대표하는 내부/외부점을 검증한다. 서버 렌더링 테스트는 네 SVG가 `36×30` 크기와 새 업데이트 내역 문구를 갖는지 확인한다.
+
+- [ ] **Step 2: RED 확인**
+
+  Run: `node --test tests/masks-layout.test.mjs tests/rendered-html.test.mjs`
+
+  Expected: 새 대표점 또는 새 아이콘 크기·업데이트 문구 기대값이 기존 디자인과 달라 FAIL한다.
+
+- [ ] **Step 3: Canvas 기하와 SVG 아이콘을 같은 플레이풀 아트 디렉션으로 재구성**
+
+  `masks.mjs`의 내부 판정·외곽 경로·세부선을 함께 수정하고, `QuickSettings.tsx`의 네 SVG는 둥근 선 끝과 제한된 내부 디테일을 사용한다. CSS는 선택 상태와 비선택 상태 모두에서 세부선 대비를 유지한다.
+
+- [ ] **Step 4: GREEN 및 실제 화면 검증**
+
+  Run: `npm test && npm run lint && npm run build:static && git diff --check`
+
+  Expected: 전체 PASS. 이어서 390px 실제 브라우저에서 네 마스크를 각각 선택해 100개 표시, 가로 넘침 없음, 아이콘 식별성, 업데이트 내역 첫 항목, 콘솔 오류 0을 확인한다.
+
+- [ ] **Step 5: Task 3 커밋**
+
+  ```bash
+  git add docs/superpowers/plans/2026-08-25-four-classroom-masks.md app/lib/masks.mjs app/components/QuickSettings.tsx app/globals.css app/components/InfoDialog.tsx tests/masks-layout.test.mjs tests/rendered-html.test.mjs
+  git commit -m "feat: redesign classroom masks for younger learners"
   ```
