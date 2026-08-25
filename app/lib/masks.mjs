@@ -142,7 +142,7 @@ function isInsideLeaf(x, y) {
   const stemY = y - 0.74;
   const stemAxisX = Math.cos(stemAngle) * stemX - Math.sin(stemAngle) * stemY;
   const stemAxisY = Math.sin(stemAngle) * stemX + Math.cos(stemAngle) * stemY;
-  const stem = (stemAxisX / 0.025) ** 2 + (stemAxisY / 0.08) ** 2 <= 1;
+  const stem = (stemAxisX / 0.025) ** 2 + (stemAxisY / 0.055) ** 2 <= 1;
   return leafBody || stem;
 }
 

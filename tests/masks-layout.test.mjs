@@ -293,7 +293,36 @@ test("playful mask paths keep rounded lobes, a tilted leaf, and friendly details
   assert.ok(pathCommands("cloud").filter(([method]) => method === "bezierCurveTo").length >= 12, "cloud has four rounded peaks");
 });
 
-function flattenPath(commands) {
+test("leaf petiole placement stays inside the exact path at the body junction", () => {
+  const commands = [];
+  const context = new Proxy({}, {
+    get: (_, method) => (...args) => commands.push([method, ...args]),
+  });
+  traceMaskPath(context, "leaf");
+  const polygon = flattenPath(commands, 192);
+  const width = 1200;
+  const height = 500;
+  const bounds = getMaskBounds("leaf", width, height);
+  const toApiPoint = (localX, localY) => [
+    localX * (2 * bounds.halfWidth) / width,
+    localY * (2 * bounds.halfHeight) / height,
+  ];
+  const [reportedX, reportedY] = toApiPoint(-0.22, 0.68);
+  assert.equal(isInsideMask("leaf", reportedX, reportedY, width, height), false, "reported junction leak is excluded");
+
+  for (let xIndex = 0; xIndex <= 88; xIndex += 1) {
+    const localX = -0.32 + xIndex * 0.0025;
+    for (let yIndex = 0; yIndex <= 56; yIndex += 1) {
+      const localY = 0.62 + yIndex * 0.0025;
+      const [x, y] = toApiPoint(localX, localY);
+      if (isInsideMask("leaf", x, y, width, height)) {
+        assert.equal(isPointInPolygon(localX, localY, polygon), true, `leaf junction containment ${localX},${localY}`);
+      }
+    }
+  }
+});
+
+function flattenPath(commands, steps = 24) {
   const points = [];
   let current = null;
   for (const [method, ...args] of commands) {
@@ -303,8 +332,8 @@ function flattenPath(commands) {
     } else if (method === "bezierCurveTo" && current) {
       const [control1X, control1Y, control2X, control2Y, endX, endY] = args;
       const [startX, startY] = current;
-      for (let step = 1; step <= 24; step += 1) {
-        const t = step / 24;
+      for (let step = 1; step <= steps; step += 1) {
+        const t = step / steps;
         const inverse = 1 - t;
         points.push([
           inverse ** 3 * startX + 3 * inverse ** 2 * t * control1X + 3 * inverse * t ** 2 * control2X + t ** 3 * endX,
