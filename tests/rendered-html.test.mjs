@@ -33,7 +33,8 @@ test("server-renders the teacher word cloud classroom", async () => {
     "마스크: 나뭇잎",
     "마스크: 전구",
     "마스크: 구름",
-    "2026-08-25 — 나비·나뭇잎·전구·구름 마스크를 초등학생용 둥근 동화책 스티커 스타일로 재디자인",
+    "글꼴: 동글동글 주아",
+    "글꼴: 또박또박 고운돋움",
   ]) {
     assert.match(html, new RegExp(phrase));
   }
@@ -43,7 +44,7 @@ test("server-renders the teacher word cloud classroom", async () => {
       new RegExp(`<svg class="setting-icon setting-icon--${maskId}"[^>]*\\bwidth="36"[^>]*\\bheight="30"`),
     );
   }
-  assert.match(html, /<button[^>]*title="2026-08-25 — 나비·나뭇잎·전구·구름 마스크를 초등학생용 둥근 동화책 스티커 스타일로 재디자인"/);
+  assert.match(html, /<button[^>]*title="2026-08-25 — 초등학생이 좋아할 만한 무료 한글 글꼴 &#x27;동글동글 주아&#x27;와 &#x27;또박또박 고운돋움&#x27; 2종을 추가"/);
   assert.match(html, /setting-icon__detail/);
   assert.doesNotMatch(html, /data-latest-update/);
   for (const starterMarker of [
@@ -78,6 +79,7 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
     assert.match(options, new RegExp(`\\b${count}\\b`));
   }
   assert.match(settings, /aria-pressed/);
+  assert.match(settings, /choice\.family/);
   assert.match(settings, /이전 색상/);
   assert.match(settings, /다음 색상/);
   assert.match(settings, /ChevronIcon/);
@@ -94,11 +96,16 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
     assert.match(workspace, new RegExp(example));
   }
   assert.match(dialog, /2026-08-25 — 나비·나뭇잎·전구·구름 마스크를 초등학생용 둥근 동화책 스티커 스타일로 재디자인/);
+  assert.match(dialog, /2026-08-25 — 초등학생이 좋아할 만한 무료 한글 글꼴 '동글동글 주아'와 '또박또박 고운돋움' 2종을 추가/);
   assert.match(dialog, /2026-07-23 — 선택한 마스크 안에 단어가 배치되도록/);
   assert.match(dialog, /현재 색상 이름과 첫 화살표의 비교 순서를 보여 주고/);
   assert.match(dialog, /말풍선 마스크 버튼을 실제 말풍선처럼 보이는 아이콘으로 개선/);
   assert.match(dialog, /마스크와 관계없이 선택한 모든 단어를 마스크 안에 배치하도록/);
   assert.match(settings, /linear-gradient\(135deg/);
+  assert.match(options, /family: "Jua, sans-serif"/);
+  assert.match(options, /family: "'Gowun Dodum', sans-serif"/);
+  assert.match(styles, /fonts\.googleapis\.com\/css2\?family=Gowun\+Dodum\&family=Jua/);
+  assert.match(styles, /\.setting-options--font\s*\{[^}]*flex-wrap:\s*wrap/s);
   assert.match(studio, /localStorage\.setItem\("cloud-classroom-settings"/);
   for (const privateValue of ["text", "excluded", "keywords", "result"]) {
     assert.doesNotMatch(

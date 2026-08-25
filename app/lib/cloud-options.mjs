@@ -23,6 +23,8 @@ export const FONT_OPTIONS = [
   { id: "clean", label: "깔끔한 고딕", family: "Arial, sans-serif", weight: 700 },
   { id: "strong", label: "힘 있는 고딕", family: "Arial Black, Arial, sans-serif", weight: 800 },
   { id: "serif", label: "부드러운 명조", family: "Georgia, serif", weight: 700 },
+  { id: "jua", label: "동글동글 주아", family: "Jua, sans-serif", weight: 400 },
+  { id: "gowun", label: "또박또박 고운돋움", family: "'Gowun Dodum', sans-serif", weight: 400 },
 ];
 
 export const WORD_COUNT_OPTIONS = [20, 40, 60, 80, 100];

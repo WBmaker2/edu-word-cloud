@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DEFAULT_SETTINGS, MASK_OPTIONS, PALETTE_OPTIONS, WORD_COUNT_OPTIONS, normalizeSettings } from "../app/lib/cloud-options.mjs";
+import { DEFAULT_SETTINGS, FONT_OPTIONS, MASK_OPTIONS, PALETTE_OPTIONS, WORD_COUNT_OPTIONS, normalizeSettings } from "../app/lib/cloud-options.mjs";
 import { canMovePalette, getPaletteNavigationTarget } from "../app/lib/palette-navigation.mjs";
 
 test("offers the approved masks and word counts with forty as default", () => {
@@ -32,4 +32,16 @@ test("offers six palettes and starts arrow comparison from the leftmost palette"
   assert.equal(canMovePalette("classroom", -1, true), false);
   assert.equal(canMovePalette("spring", 1, true), false);
   assert.equal(canMovePalette("clear", -1, false), true);
+});
+
+test("offers five readable font choices including the two child-friendly Korean fonts", () => {
+  assert.deepEqual(FONT_OPTIONS.map(({ id, label }) => [id, label]), [
+    ["clean", "깔끔한 고딕"],
+    ["strong", "힘 있는 고딕"],
+    ["serif", "부드러운 명조"],
+    ["jua", "동글동글 주아"],
+    ["gowun", "또박또박 고운돋움"],
+  ]);
+  assert.equal(FONT_OPTIONS.find(({ id }) => id === "jua")?.weight, 400);
+  assert.equal(FONT_OPTIONS.find(({ id }) => id === "gowun")?.weight, 400);
 });

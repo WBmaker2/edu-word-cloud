@@ -21,7 +21,7 @@ type QuickSettingsProps = {
   onChange: (settings: Settings) => void;
 };
 
-type Choice = { id: string; label: string; glyph?: string; colors?: readonly string[] };
+type Choice = { id: string; label: string; family?: string; glyph?: string; colors?: readonly string[] };
 
 export function QuickSettings({ settings, onChange }: QuickSettingsProps) {
   const [hasNavigatedPalette, setHasNavigatedPalette] = useState(false);
@@ -170,6 +170,7 @@ function SettingGroup({
               className={active ? `setting-option setting-option--${choice.id} is-selected` : `setting-option setting-option--${choice.id}`}
               aria-pressed={active}
               aria-label={`${label}: ${choice.label}`}
+              style={kind === "font" && choice.family ? { fontFamily: choice.family } : undefined}
               onClick={() => onSelect(choice.id)}
             >
               {kind === "mask" ? <MaskIcon maskId={choice.id} glyph={choice.glyph} /> : null}

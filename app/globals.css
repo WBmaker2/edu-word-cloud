@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -64,6 +65,7 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .palette-navigation button { display: grid; width: 36px; height: 36px; min-width: 36px; min-height: 36px; place-items: center; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--navy); padding: 0; }
 .palette-navigation svg { width: 18px; height: 18px; }
 .setting-options--font .setting-option { min-width: auto; padding-inline: 9px; }
+.setting-options--font { flex-wrap: wrap; }
 .setting-options--count { gap: 6px; }
 .setting-options--count .setting-option { min-width: 40px; padding-inline: 5px; font-size: .85rem; }
 .setting-description { display: none; }

@@ -75,25 +75,39 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
   }, [result, settings.maskId, settings.wordCount]);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext("2d");
-    if (!canvas || !context) return;
+    let cancelled = false;
 
-    context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    drawMaskOutline(context, settings.maskId, palette.colors[0]);
+    async function renderCanvas() {
+      if (typeof document !== "undefined" && document.fonts?.load) {
+        await Promise.allSettled([document.fonts.load(`${font.weight} 64px ${font.family}`)]);
+      }
+      if (cancelled) return;
 
-    if (!layout) {
-      drawExampleCloud(context, font.family, font.weight, palette.colors);
-      return;
+      const canvas = canvasRef.current;
+      const context = canvas?.getContext("2d");
+      if (!canvas || !context) return;
+
+      context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      drawMaskOutline(context, settings.maskId, palette.colors[0]);
+
+      if (!layout) {
+        drawExampleCloud(context, font.family, font.weight, palette.colors);
+        return;
+      }
+
+      for (const word of layout.placed) {
+        drawWord(context, word, font.family, font.weight, palette.colors);
+      }
     }
 
-    for (const word of layout.placed) {
-      drawWord(context, word, font.family, font.weight, palette.colors);
-    }
+    void renderCanvas();
+    return () => {
+      cancelled = true;
+    };
   }, [font, layout, palette, settings.maskId, settings.wordCount]);
 
   function handleDownload() {

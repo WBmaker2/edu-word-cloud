@@ -16,6 +16,7 @@ test("renders a fixed-size accessible canvas with PNG download support", async (
   assert.match(canvasSource, /result\.words\.slice\(0, settings\.wordCount\)/);
   assert.match(canvasSource, /\[result, settings\.maskId, settings\.wordCount\]/);
   assert.match(canvasSource, /traceMaskPath\(context, maskId\)/);
+  assert.match(canvasSource, /document\.fonts\.load/);
   assert.doesNotMatch(canvasSource, /roundRect/);
 });
 
