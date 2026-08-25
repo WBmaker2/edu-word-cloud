@@ -136,14 +136,7 @@ function isInsideLeaf(x, y) {
   const angle = 0.16;
   const axisX = Math.cos(angle) * x - Math.sin(angle) * y;
   const axisY = Math.sin(angle) * x + Math.cos(angle) * y;
-  const leafBody = (axisX / 1.02) ** 2 + (axisY / 0.67) ** 2 <= 1;
-  const stemAngle = 0.2;
-  const stemX = x + 0.2;
-  const stemY = y - 0.74;
-  const stemAxisX = Math.cos(stemAngle) * stemX - Math.sin(stemAngle) * stemY;
-  const stemAxisY = Math.sin(stemAngle) * stemX + Math.cos(stemAngle) * stemY;
-  const stem = (stemAxisX / 0.025) ** 2 + (stemAxisY / 0.055) ** 2 <= 1;
-  return leafBody || stem;
+  return (axisX / 1) ** 2 + (axisY / 0.65) ** 2 <= 1;
 }
 
 function isInsideLightbulb(x, y) {

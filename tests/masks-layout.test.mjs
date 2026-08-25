@@ -211,7 +211,7 @@ test("new mask paths are closed and contain sampled internal boundary points", (
   const height = 500;
   const samples = {
     butterfly: [[-0.4, -0.855], [0.4, -0.855], [-0.72, 0.3], [0.72, 0.3]],
-    leaf: [[0, -0.67], [0, 0.67], [-0.98, 0], [0.98, 0]],
+    leaf: [[0, -0.64], [0, 0.64], [-0.98, 0], [0.98, 0]],
     lightbulb: [[0, -0.95], [-0.3, 0.87], [0.3, 0.87]],
     cloud: [[0, -0.99], [-0.8, 0.3], [0.8, 0.3], [0, 0.7]],
   };
@@ -307,8 +307,10 @@ test("leaf petiole placement stays inside the exact path at the body junction", 
     localX * (2 * bounds.halfWidth) / width,
     localY * (2 * bounds.halfHeight) / height,
   ];
-  const [reportedX, reportedY] = toApiPoint(-0.22, 0.68);
-  assert.equal(isInsideMask("leaf", reportedX, reportedY, width, height), false, "reported junction leak is excluded");
+  for (const [localX, localY] of [[-0.22, 0.68], [-0.1028595, 0.6807138]]) {
+    const [reportedX, reportedY] = toApiPoint(localX, localY);
+    assert.equal(isInsideMask("leaf", reportedX, reportedY, width, height), false, `reported leak ${localX},${localY} is excluded`);
+  }
 
   for (let xIndex = 0; xIndex <= 88; xIndex += 1) {
     const localX = -0.32 + xIndex * 0.0025;
@@ -321,6 +323,98 @@ test("leaf petiole placement stays inside the exact path at the body junction", 
     }
   }
 });
+
+test("leaf placement boundary stays inside the high-resolution visible path", () => {
+  const width = 1200;
+  const height = 500;
+  const bounds = getMaskBounds("leaf", width, height);
+  const polygon = flattenPath(capturePath("leaf"), 256);
+  const toApiPoint = (localX, localY) => [
+    localX * (2 * bounds.halfWidth) / width,
+    localY * (2 * bounds.halfHeight) / height,
+  ];
+
+  for (let direction = 0; direction < 2048; direction += 1) {
+    const angle = (direction * Math.PI * 2) / 2048;
+    const unitX = Math.cos(angle);
+    const unitY = Math.sin(angle);
+    let low = 0;
+    let high = 1.5;
+    for (let iteration = 0; iteration < 24; iteration += 1) {
+      const radius = (low + high) / 2;
+      const [x, y] = toApiPoint(unitX * radius, unitY * radius);
+      if (isInsideMask("leaf", x, y, width, height)) low = radius;
+      else high = radius;
+    }
+    const localX = unitX * low;
+    const localY = unitY * low;
+    assert.equal(isPointInPolygon(localX, localY, polygon), true, `leaf boundary direction ${direction}`);
+  }
+});
+
+test("leaf placement region has exactly one sampled connected component", () => {
+  const width = 1200;
+  const height = 500;
+  const bounds = getMaskBounds("leaf", width, height);
+  const step = 0.005;
+  const min = -1.1;
+  const size = Math.round((2.2 / step) + 1);
+  const toApiPoint = (localX, localY) => [
+    localX * (2 * bounds.halfWidth) / width,
+    localY * (2 * bounds.halfHeight) / height,
+  ];
+  const inside = new Uint8Array(size * size);
+  let first = -1;
+  for (let row = 0; row < size; row += 1) {
+    const localY = min + row * step;
+    for (let column = 0; column < size; column += 1) {
+      const localX = min + column * step;
+      const [x, y] = toApiPoint(localX, localY);
+      if (isInsideMask("leaf", x, y, width, height)) {
+        const index = row * size + column;
+        inside[index] = 1;
+        if (first < 0) first = index;
+      }
+    }
+  }
+  assert.ok(first >= 0, "leaf placement has sampled points");
+
+  const visited = new Uint8Array(inside.length);
+  const stack = [first];
+  visited[first] = 1;
+  let visitedCount = 0;
+  while (stack.length > 0) {
+    const index = stack.pop();
+    visitedCount += 1;
+    const row = Math.floor(index / size);
+    const column = index % size;
+    for (let rowOffset = -1; rowOffset <= 1; rowOffset += 1) {
+      for (let columnOffset = -1; columnOffset <= 1; columnOffset += 1) {
+        if (rowOffset === 0 && columnOffset === 0) continue;
+        const nextRow = row + rowOffset;
+        const nextColumn = column + columnOffset;
+        if (nextRow < 0 || nextRow >= size || nextColumn < 0 || nextColumn >= size) continue;
+        const next = nextRow * size + nextColumn;
+        if (inside[next] && !visited[next]) {
+          visited[next] = 1;
+          stack.push(next);
+        }
+      }
+    }
+  }
+
+  const sampledCount = inside.reduce((count, value) => count + value, 0);
+  assert.equal(visitedCount, sampledCount, "leaf placement samples form one component");
+});
+
+function capturePath(maskId) {
+  const commands = [];
+  const context = new Proxy({}, {
+    get: (_, method) => (...args) => commands.push([method, ...args]),
+  });
+  traceMaskPath(context, maskId);
+  return commands;
+}
 
 function flattenPath(commands, steps = 24) {
   const points = [];
