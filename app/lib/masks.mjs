@@ -137,7 +137,12 @@ function isInsideLeaf(x, y) {
   const axisX = Math.cos(angle) * x - Math.sin(angle) * y;
   const axisY = Math.sin(angle) * x + Math.cos(angle) * y;
   const leafBody = (axisX / 1.02) ** 2 + (axisY / 0.67) ** 2 <= 1;
-  const stem = isInsideEllipse(x, y, -0.16, 0.8, 0.17, 0.2);
+  const stemAngle = 0.2;
+  const stemX = x + 0.2;
+  const stemY = y - 0.74;
+  const stemAxisX = Math.cos(stemAngle) * stemX - Math.sin(stemAngle) * stemY;
+  const stemAxisY = Math.sin(stemAngle) * stemX + Math.cos(stemAngle) * stemY;
+  const stem = (stemAxisX / 0.025) ** 2 + (stemAxisY / 0.08) ** 2 <= 1;
   return leafBody || stem;
 }
 
@@ -218,9 +223,9 @@ function traceLeafPath(context) {
   context.bezierCurveTo(-0.16, -0.86, -0.9, -0.52, -1.04, 0);
   context.bezierCurveTo(-1.12, 0.2, -1.12, 0.62, -0.48, 0.7);
   context.bezierCurveTo(-0.4, 0.68, -0.28, 0.7, -0.18, 0.68);
-  context.bezierCurveTo(-0.5, 0.68, -0.78, 0.84, -0.55, 0.98);
-  context.bezierCurveTo(-0.24, 1.05, 0.02, 1.04, 0.1, 0.99);
-  context.lineTo(0.04, 0.68);
+  context.bezierCurveTo(-0.4, 0.7, -0.34, 0.82, -0.35, 0.9);
+  context.bezierCurveTo(-0.35, 0.96, -0.28, 0.99, -0.22, 0.95);
+  context.bezierCurveTo(-0.18, 0.87, -0.13, 0.76, -0.12, 0.68);
   context.bezierCurveTo(0.48, 0.7, 1.12, 0.62, 1.04, 0);
   context.bezierCurveTo(1.12, -0.2, 1.1, -0.62, 0.2, -0.82);
 }

@@ -268,6 +268,11 @@ test("playful mask paths keep rounded lobes, a tilted leaf, and friendly details
   const bottomPoint = leaf.reduce((best, point) => (point[1] > best[1] ? point : best));
   assert.ok(topPoint[0] > 0.1, "leaf tilts up toward the right");
   assert.ok(bottomPoint[0] < -0.1, "leaf stem side sits down toward the left");
+  const lowerStem = leaf.filter(([, y]) => y >= 0.82);
+  const stemX = lowerStem.map(([x]) => x);
+  assert.ok(lowerStem.length > 0, "leaf has a lower petiole");
+  assert.ok(Math.max(...stemX) - Math.min(...stemX) < 0.2, "leaf petiole stays narrow");
+  assert.ok(Math.max(...stemX) < 0, "leaf petiole stays down-left");
 
   const detailCommands = (maskId) => {
     const commands = [];
