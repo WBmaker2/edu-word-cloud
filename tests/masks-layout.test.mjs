@@ -29,6 +29,13 @@ test("new classroom masks expose recognizable connected interiors", () => {
   }
 });
 
+test("leaf keeps a tall physical silhouette without losing practical area", () => {
+  const { halfWidth, halfHeight } = getMaskBounds("leaf", 1200, 500);
+  assert.ok(halfHeight / halfWidth >= 0.62, "leaf physical bounds should read as a diagonal leaf");
+  const area = halfWidth * halfHeight;
+  assert.ok(area >= 50000 && area <= 80000, "leaf bounds should preserve practical word area");
+});
+
 test("layout is deterministic and remains inside the selected mask", () => {
   const words = [
     { text: "환경", count: 8, weight: 8 },

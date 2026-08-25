@@ -12,7 +12,7 @@ export function getMaskBounds(maskId, width, height) {
   if (maskId === "bubble") return { halfWidth: width * 0.39, halfHeight: height * 0.36 };
   if (maskId === "book") return { halfWidth: width * 0.25, halfHeight: height * 0.42 };
   if (maskId === "butterfly") return { halfWidth: width * 0.31, halfHeight: height * 0.42 };
-  if (maskId === "leaf") return { halfWidth: width * 0.31, halfHeight: height * 0.34 };
+  if (maskId === "leaf") return { halfWidth: width * 0.26, halfHeight: height * 0.41 };
   if (maskId === "lightbulb") return { halfWidth: shortSide * 0.34, halfHeight: shortSide * 0.44 };
   if (maskId === "cloud") return { halfWidth: width * 0.34, halfHeight: height * 0.34 };
   return { halfWidth: shortSide * 0.44, halfHeight: shortSide * 0.44 };
