@@ -220,7 +220,7 @@ test("new mask paths are closed and contain sampled internal boundary points", (
       const x = localX * (2 * bounds.halfWidth) / width;
       const y = localY * (2 * bounds.halfHeight) / height;
       assert.equal(isInsideMask(maskId, x, y, width, height), true, `${maskId}: internal sample`);
-      assert.equal(isPointInPolygon(localX, localY, polygon), true, `${maskId}: path containment`);
+      assert.equal(isPointInPolygon(localX, localY, polygon), true, `${maskId}: path containment ${localX},${localY}`);
     }
 
     for (let xIndex = -100; xIndex <= 100; xIndex += 1) {
@@ -235,6 +235,46 @@ test("new mask paths are closed and contain sampled internal boundary points", (
       }
     }
   }
+});
+
+test("playful mask paths keep rounded lobes, a tilted leaf, and friendly details", () => {
+  const pathCommands = (maskId) => {
+    const commands = [];
+    const context = new Proxy({}, {
+      get: (_, method) => (...args) => commands.push([method, ...args]),
+    });
+    traceMaskPath(context, maskId);
+    return commands;
+  };
+
+  const butterfly = flattenPath(pathCommands("butterfly"));
+  const centerTop = Math.min(...butterfly.filter(([x]) => Math.abs(x) < 0.12).map(([, y]) => y));
+  assert.ok(centerTop > -0.82, "butterfly wing notch stays shallow");
+  assert.ok(pathCommands("butterfly").filter(([method]) => method === "bezierCurveTo").length >= 12);
+
+  const leaf = flattenPath(pathCommands("leaf"));
+  const topPoint = leaf.reduce((best, point) => (point[1] < best[1] ? point : best));
+  const bottomPoint = leaf.reduce((best, point) => (point[1] > best[1] ? point : best));
+  assert.ok(topPoint[0] > 0.1, "leaf tilts up toward the right");
+  assert.ok(bottomPoint[0] < -0.1, "leaf stem side sits down toward the left");
+
+  const detailCommands = (maskId) => {
+    const commands = [];
+    const context = new Proxy({}, {
+      get: (_, method) => (...args) => commands.push([method, ...args]),
+    });
+    traceMaskDetail(context, maskId);
+    return commands;
+  };
+  const leafDetails = detailCommands("leaf");
+  assert.ok(leafDetails.filter(([method]) => method === "lineTo").length >= 4, "leaf has short branch veins");
+  assert.ok(leafDetails.some(([method]) => method === "bezierCurveTo"), "leaf has a curved central vein");
+
+  const bulbDetails = detailCommands("lightbulb");
+  assert.ok(bulbDetails.filter(([method]) => method === "bezierCurveTo").length >= 2, "bulb has a rounded heart filament");
+  assert.ok(bulbDetails.filter(([method]) => method === "lineTo").length >= 2, "bulb has socket lines");
+
+  assert.ok(pathCommands("cloud").filter(([method]) => method === "bezierCurveTo").length >= 12, "cloud has four rounded peaks");
 });
 
 function flattenPath(commands) {

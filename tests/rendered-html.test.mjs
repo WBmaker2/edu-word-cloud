@@ -33,17 +33,18 @@ test("server-renders the teacher word cloud classroom", async () => {
     "마스크: 나뭇잎",
     "마스크: 전구",
     "마스크: 구름",
-    "2026-08-25 — 나비·나뭇잎·전구·구름 마스크와 선택 아이콘을 추가",
+    "2026-08-25 — 나비·나뭇잎·전구·구름 마스크를 초등학생용 둥근 동화책 스티커 스타일로 재디자인",
   ]) {
     assert.match(html, new RegExp(phrase));
   }
   for (const maskId of ["butterfly", "leaf", "lightbulb", "cloud"]) {
     assert.match(
       html,
-      new RegExp(`<svg class="setting-icon setting-icon--${maskId}"[^>]*\\bwidth="32"[^>]*\\bheight="28"`),
+      new RegExp(`<svg class="setting-icon setting-icon--${maskId}"[^>]*\\bwidth="36"[^>]*\\bheight="30"`),
     );
   }
-  assert.match(html, /<button[^>]*title="2026-08-25 — 나비·나뭇잎·전구·구름 마스크와 선택 아이콘을 추가"/);
+  assert.match(html, /<button[^>]*title="2026-08-25 — 나비·나뭇잎·전구·구름 마스크를 초등학생용 둥근 동화책 스티커 스타일로 재디자인"/);
+  assert.match(html, /setting-icon__detail/);
   assert.doesNotMatch(html, /data-latest-update/);
   for (const starterMarker of [
     "codex-preview",
@@ -92,7 +93,7 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
   for (const example of ["초등 저학년", "초등 고학년", "중학생", "고등학생", "교과 활동"]) {
     assert.match(workspace, new RegExp(example));
   }
-  assert.match(dialog, /2026-07-19 — 교사용 워드 클라우드 사이트 첫 제작/);
+  assert.match(dialog, /2026-08-25 — 나비·나뭇잎·전구·구름 마스크를 초등학생용 둥근 동화책 스티커 스타일로 재디자인/);
   assert.match(dialog, /2026-07-23 — 선택한 마스크 안에 단어가 배치되도록/);
   assert.match(dialog, /현재 색상 이름과 첫 화살표의 비교 순서를 보여 주고/);
   assert.match(dialog, /말풍선 마스크 버튼을 실제 말풍선처럼 보이는 아이콘으로 개선/);
