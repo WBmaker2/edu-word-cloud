@@ -18,18 +18,18 @@ test("cute silhouettes keep the object-defining landmarks readable", () => {
   for (const [x, y] of [[-0.58, -0.44], [0.58, -0.44], [-0.48, 0.34], [0.48, 0.34], [0, 0]]) {
     assert.equal(inside("butterfly", [x, y]), true, `butterfly landmark ${x},${y}`);
   }
-  for (const [x, y] of [[-0.98, -0.98], [0.98, -0.98], [-0.32, -0.02], [0.32, -0.02]]) {
+  for (const [x, y] of [[-0.98, -0.98], [0.98, -0.98], [-0.96, 0], [0.96, 0]]) {
     assert.equal(inside("butterfly", [x, y]), false, `butterfly gap ${x},${y}`);
   }
 
   // A leaf tapers to a high-right tip and continues into a low-left petiole.
-  for (const [x, y] of [[0.7, -0.6], [0.2, -0.2], [-0.2, 0.22], [-0.56, 0.58], [-0.25, 0.92]]) {
+  for (const [x, y] of [[0.7, -0.6], [0.2, -0.2], [-0.2, 0.22], [-0.56, 0.58], [-0.4, 0.8]]) {
     assert.equal(inside("leaf", [x, y]), true, `leaf landmark ${x},${y}`);
   }
   assert.equal(inside("leaf", [0.98, 0.72]), false, "leaf tapered edge");
 
   // A friendly cloud has a low, rounded body and only a few broad peaks.
-  for (const [x, y] of [[-0.72, 0.16], [-0.38, -0.36], [0, -0.6], [0.4, -0.32], [0.72, 0.18], [0, 0.54]]) {
+  for (const [x, y] of [[-0.72, 0.16], [-0.38, -0.36], [0, -0.6], [0.4, -0.32], [0.72, 0.18], [0, 0.3]]) {
     assert.equal(inside("cloud", [x, y]), true, `cloud landmark ${x},${y}`);
   }
   for (const [x, y] of [[-0.96, -0.62], [0.96, -0.62], [-0.92, 0.74], [0.92, 0.74]]) {

@@ -44,7 +44,7 @@ test("server-renders the teacher word cloud classroom", async () => {
       new RegExp(`<svg class="setting-icon setting-icon--${maskId}"[^>]*\\bwidth="36"[^>]*\\bheight="30"`),
     );
   }
-  assert.match(html, /<button[^>]*title="2026-08-26 — 나비·나뭇잎·구름 마스크를 작은 아이콘에서도 바로 알아보는 둥글고 귀여운 실루엣으로 다시 그리고, 워드클라우드 배치 영역을 함께 정돈"/);
+  assert.match(html, /<button[^>]*title="2026-08-26 — 첨부 이미지 기준으로 나비·나뭇잎·전구·구름 마스크의 외곽선과 아이콘을 다시 그리고, 단어 배치 영역을 외곽 경로와 일치시킴"/);
   assert.match(html, /setting-icon__detail/);
   assert.doesNotMatch(html, /data-latest-update/);
   for (const starterMarker of [
@@ -95,7 +95,7 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
   for (const example of ["초등 저학년", "초등 고학년", "중학생", "고등학생", "교과 활동"]) {
     assert.match(workspace, new RegExp(example));
   }
-  assert.match(dialog, /2026-08-26 — 나비·나뭇잎·구름 마스크를 작은 아이콘에서도 바로 알아보는 둥글고 귀여운 실루엣으로 다시 그리고/);
+  assert.match(dialog, /2026-08-26 — 첨부 이미지 기준으로 나비·나뭇잎·전구·구름 마스크의 외곽선과 아이콘을 다시 그리고, 단어 배치 영역을 외곽 경로와 일치시킴/);
   assert.match(dialog, /2026-08-25 — 초등학생이 좋아할 만한 무료 한글 글꼴 '동글동글 주아'와 '또박또박 고운돋움' 2종을 추가/);
   assert.match(dialog, /2026-07-23 — 선택한 마스크 안에 단어가 배치되도록/);
   assert.match(dialog, /현재 색상 이름과 첫 화살표의 비교 순서를 보여 주고/);

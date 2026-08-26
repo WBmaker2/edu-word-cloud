@@ -205,8 +205,8 @@ function MaskIcon({ maskId, glyph }: { maskId: string; glyph?: string }) {
   if (maskId === "butterfly") {
     return (
       <svg className="setting-icon setting-icon--butterfly" viewBox="0 0 36 30" aria-hidden="true" fill="currentColor" width="36" height="30">
-        <path d="M17 13.7C14.6 8.1 8.5 3.5 4.7 5c-2.1.9-.7 6.7 4.5 9.2-4.7-.3-7.1 2.7-5.3 5.1 1.9 2.6 8.4-.1 12-3.9l1.1-1.3v5.1c-1.3 1.6-.8 3.4 1 3.4s2.3-1.8 1-3.4v-5.1l1.1 1.3c3.6 3.8 10.1 6.5 12 3.9 1.8-2.4-.6-5.4-5.3-5.1 5.2-2.5 6.6-8.3 4.5-9.2C27.5 3.5 21.4 8.1 19 13.7l-1 1.7-1-1.7Z" />
-        <path className="setting-icon__detail" d="M18 8v12.8M14 11.5l2.8 2M22 11.5l-2.8 2" />
+        <path d="M18 14.5C15.5 8.5 9.2 2.7 5.1 4.6c-2.3 1.1-.9 7.2 4.1 10.1-4.3-.3-6.8 2.5-5 5.5 1.8 3.1 8.5.7 12.8-3.8l1-1.1 1 1.1c4.3 4.5 11 6.9 12.8 3.8 1.8-3-.7-5.8-5-5.5 5-2.9 6.4-9 4.1-10.1-4.1-1.9-10.4 3.9-12.9 9.9Z" />
+        <path className="setting-icon__detail" d="M18 11v13M16.5 11.5 14 8.4M19.5 11.5 22 8.4M15.8 25.5h4.4" />
       </svg>
     );
   }
@@ -214,9 +214,8 @@ function MaskIcon({ maskId, glyph }: { maskId: string; glyph?: string }) {
   if (maskId === "leaf") {
     return (
       <svg className="setting-icon setting-icon--leaf" viewBox="0 0 36 30" aria-hidden="true" fill="currentColor" width="36" height="30">
-        <path d="M30.8 3.1C19.1 3.9 9.2 6.8 6.2 13.9c-2.3 5.5.9 9.3 6.3 9 7.9-.4 13.8-8.2 18.3-19.8Z" />
-        <path d="M6.3 27.3c5.7-8.4 12.3-14.7 23.4-23.2l1.2 1.6C21.4 13.5 14.7 20.2 8.2 28.2Z" />
-        <path className="setting-icon__detail" d="M8.6 25.7C15.2 17.1 21.4 11.4 29.5 5.9M14 19.1l-3.6-1.4M18.3 14.8l-3.2-1.7M22.8 10.8l-2.7-1.7" />
+        <path d="M30.9 2.7C23.3 4 16 5.8 11.1 8.9c-.2-1.4-1.1-2.1-2.1-1.7-1.1.5-1.1 1.8-.4 2.8-1.3-.3-2.3.2-2.4 1.3-.1 1.1.7 1.8 1.8 2-1.1.4-1.6 1.4-1 2.3.5.9 1.6 1 2.6.5-1 .9-1.1 2-.3 2.7.7.7 1.8.5 2.5-.3-.5 1.1-.1 2.1.8 2.4 1 .3 1.7-.4 1.9-1.5.2 1.2 1 1.8 1.9 1.6 1-.2 1.3-1.2.9-2.3 5-2.3 8.9-6.7 13.6-18Z" />
+        <path className="setting-icon__detail" d="M7 27.4C13.2 18.2 20.2 10.8 30.2 3.5M12.5 20.4 9 18.8M16.2 16.1 12.7 14.3M20.2 12.1 17 10.2M24.3 8.2 21.6 6.7" />
       </svg>
     );
   }
@@ -224,9 +223,9 @@ function MaskIcon({ maskId, glyph }: { maskId: string; glyph?: string }) {
   if (maskId === "lightbulb") {
     return (
       <svg className="setting-icon setting-icon--lightbulb" viewBox="0 0 36 30" aria-hidden="true" fill="currentColor" width="36" height="30">
-        <path d="M18 2.2a9.3 9.3 0 0 0-5.4 16.9c.8.6 1.3 1.3 1.5 2.3h7.8c.2-1 .7-1.7 1.5-2.3A9.3 9.3 0 0 0 18 2.2Z" />
-        <path d="M13.8 22.1h8.4v2.1h-8.4zm1.4 3.3h5.6v2h-5.6z" />
-        <path className="setting-icon__detail" d="M14.5 14.5c1.7-2.1 2.9 2.1 4.1 0 1.2-2.1 2.4 2.1 4.1 0M14.2 22.1h7.6" />
+        <path d="M18 5a7.7 7.7 0 0 0-4.5 13.9c.9.7 1.5 1.5 1.6 2.5h5.8c.1-1 .7-1.8 1.6-2.5A7.7 7.7 0 0 0 18 5Z" />
+        <path d="M14.8 22.2h6.4v1.9h-6.4zm1.1 3h4.2v1.8h-4.2z" />
+        <path className="setting-icon__detail" d="M15.1 15c1.2-1.8 2.1 1.7 2.9 0 .8-1.7 1.7 1.8 2.9 0M15.2 22.2h5.6M18 2.2v-1M8.7 6.2 7.5 5M27.3 6.2 28.5 5M5.8 13h-1.5M30.2 13h1.5M8.7 20l-1.2 1.2M27.3 20l1.2 1.2" />
       </svg>
     );
   }
@@ -234,8 +233,8 @@ function MaskIcon({ maskId, glyph }: { maskId: string; glyph?: string }) {
   if (maskId === "cloud") {
     return (
       <svg className="setting-icon setting-icon--cloud" viewBox="0 0 36 30" aria-hidden="true" fill="currentColor" width="36" height="30">
-        <path d="M5.4 23.9h25.2a5.2 5.2 0 0 0 .3-10.4 7.2 7.2 0 0 0-12.7-2.9 6.8 6.8 0 0 0-11 3.8 4.8 4.8 0 0 0-1.8 9.5Z" />
-        <path className="setting-icon__detail" d="M10 20.8h3.3M22.7 20.8H26" />
+        <path d="M5.2 24.2a4.3 4.3 0 0 1 .4-8.5 6.2 6.2 0 0 1 11-3.3 5.2 5.2 0 0 1 8.7-1.3 4.2 4.2 0 0 1 5.1 4.2 4.4 4.4 0 0 1-.3 8.8Z" />
+        <path className="setting-icon__detail" d="M7.8 21.2h4.6M21 21.2h6.2" />
       </svg>
     );
   }

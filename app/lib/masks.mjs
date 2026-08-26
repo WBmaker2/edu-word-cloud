@@ -6,17 +6,20 @@ const STAR_POINTS = Array.from({ length: 10 }, (_, index) => {
   return [Math.cos(angle) * radius, Math.sin(angle) * radius];
 });
 
-const LOCAL_PATH_POLYGON_CACHE = new Map();
+const LOCAL_PATH_INDEX_CACHE = new Map();
+const PATH_BUCKET_COUNT = 128;
+const PATH_MIN_Y = -1.1;
+const PATH_MAX_Y = 1.1;
 
 export function getMaskBounds(maskId, width, height) {
   const shortSide = Math.min(width, height);
 
   if (maskId === "bubble") return { halfWidth: width * 0.39, halfHeight: height * 0.36 };
   if (maskId === "book") return { halfWidth: width * 0.25, halfHeight: height * 0.42 };
-  if (maskId === "butterfly") return { halfWidth: width * 0.31, halfHeight: height * 0.42 };
-  if (maskId === "leaf") return { halfWidth: width * 0.26, halfHeight: height * 0.41 };
-  if (maskId === "lightbulb") return { halfWidth: shortSide * 0.34, halfHeight: shortSide * 0.44 };
-  if (maskId === "cloud") return { halfWidth: width * 0.34, halfHeight: height * 0.34 };
+  if (maskId === "butterfly") return { halfWidth: width * 0.3, halfHeight: height * 0.46 };
+  if (maskId === "leaf") return { halfWidth: width * 0.41, halfHeight: height * 0.42 };
+  if (maskId === "lightbulb") return { halfWidth: shortSide * 0.34, halfHeight: shortSide * 0.45 };
+  if (maskId === "cloud") return { halfWidth: width * 0.32, halfHeight: height * 0.44 };
   return { halfWidth: shortSide * 0.44, halfHeight: shortSide * 0.44 };
 }
 
@@ -47,9 +50,9 @@ function isInsideLocalMask(maskId, localX, localY) {
     const bottom = 0.78 - 0.15 * pageWidth ** 1.7;
     return pageWidth <= 1 && localY >= top && localY <= bottom;
   }
-  if (maskId === "butterfly" || maskId === "leaf") return isInsidePathMask(maskId, localX, localY);
-  if (maskId === "lightbulb") return isInsideLightbulb(localX, localY);
-  if (maskId === "cloud") return isInsidePathMask(maskId, localX, localY);
+  if (maskId === "butterfly" || maskId === "leaf" || maskId === "lightbulb" || maskId === "cloud") {
+    return isInsidePathMask(maskId, localX, localY);
+  }
   return false;
 }
 
@@ -78,40 +81,63 @@ export function traceMaskPath(context, maskId) {
 
 export function traceMaskDetail(context, maskId) {
   if (maskId === "butterfly") {
-    context.moveTo(-0.08, -0.25);
-    context.bezierCurveTo(-0.12, -0.12, -0.12, 0.42, -0.08, 0.58);
-    context.bezierCurveTo(-0.04, 0.68, 0.04, 0.68, 0.08, 0.58);
-    context.bezierCurveTo(0.12, 0.42, 0.12, -0.12, 0.08, -0.25);
-    context.bezierCurveTo(0.04, -0.34, -0.04, -0.34, -0.08, -0.25);
-    context.moveTo(-0.05, -0.23);
-    context.bezierCurveTo(-0.11, -0.36, -0.18, -0.43, -0.24, -0.46);
-    context.moveTo(0.05, -0.23);
-    context.bezierCurveTo(0.11, -0.36, 0.18, -0.43, 0.24, -0.46);
+    context.moveTo(-0.03, -0.2);
+    context.bezierCurveTo(-0.1, -0.34, -0.13, 0.18, -0.08, 0.45);
+    context.bezierCurveTo(-0.05, 0.58, -0.02, 0.6, 0, 0.58);
+    context.bezierCurveTo(0.02, 0.6, 0.05, 0.58, 0.08, 0.45);
+    context.bezierCurveTo(0.13, 0.18, 0.1, -0.34, 0.03, -0.2);
+    context.moveTo(-0.02, -0.2);
+    context.bezierCurveTo(-0.06, -0.3, -0.11, -0.38, -0.17, -0.43);
+    context.moveTo(0.02, -0.2);
+    context.bezierCurveTo(0.06, -0.3, 0.11, -0.38, 0.17, -0.43);
     return true;
   }
   if (maskId === "leaf") {
-    context.moveTo(-0.42, 0.62);
-    context.bezierCurveTo(-0.1, 0.28, 0.18, -0.14, 0.38, -0.62);
-    context.moveTo(-0.12, 0.36);
-    context.lineTo(-0.42, 0.18);
-    context.moveTo(0.03, 0.12);
-    context.lineTo(-0.28, -0.06);
-    context.moveTo(0.2, -0.18);
-    context.lineTo(-0.06, -0.32);
-    context.moveTo(0.3, -0.38);
-    context.lineTo(0.08, -0.52);
+    context.moveTo(-0.82, 0.76);
+    context.bezierCurveTo(-0.42, 0.28, 0.16, -0.38, 0.88, -0.82);
+    context.moveTo(-0.5, 0.42);
+    context.lineTo(-0.78, 0.18);
+    context.moveTo(-0.25, 0.2);
+    context.lineTo(-0.55, -0.04);
+    context.moveTo(0.02, -0.02);
+    context.lineTo(-0.27, -0.25);
+    context.moveTo(0.27, -0.25);
+    context.lineTo(0.02, -0.47);
+    context.moveTo(-0.42, 0.48);
+    context.lineTo(-0.16, 0.24);
+    context.moveTo(-0.14, 0.25);
+    context.lineTo(0.1, 0.01);
+    context.moveTo(0.14, 0.01);
+    context.lineTo(0.36, -0.22);
+    context.moveTo(0.39, -0.23);
+    context.lineTo(0.58, -0.48);
     return true;
   }
   if (maskId === "lightbulb") {
-    context.moveTo(-0.2, 0.3);
-    context.bezierCurveTo(-0.32, 0.16, -0.24, 0.02, -0.1, 0.14);
-    context.bezierCurveTo(0, 0.22, 0.06, 0.3, 0.1, 0.14);
-    context.bezierCurveTo(0.24, 0.02, 0.32, 0.16, 0.2, 0.3);
-    context.bezierCurveTo(0.08, 0.42, -0.08, 0.42, -0.2, 0.3);
-    context.moveTo(-0.3, 0.58);
-    context.lineTo(0.3, 0.58);
-    context.moveTo(-0.3, 0.72);
-    context.lineTo(0.3, 0.72);
+    // Seven rays stay outside the body path, so words never occupy the rays.
+    context.moveTo(0, -0.94);
+    context.lineTo(0, -0.76);
+    context.moveTo(-0.64, -0.78);
+    context.lineTo(-0.52, -0.66);
+    context.moveTo(0.64, -0.78);
+    context.lineTo(0.52, -0.66);
+    context.moveTo(-0.92, -0.16);
+    context.lineTo(-0.74, -0.16);
+    context.moveTo(0.92, -0.16);
+    context.lineTo(0.74, -0.16);
+    context.moveTo(-0.64, 0.48);
+    context.lineTo(-0.52, 0.36);
+    context.moveTo(0.64, 0.48);
+    context.lineTo(0.52, 0.36);
+    context.moveTo(-0.24, 0.23);
+    context.bezierCurveTo(-0.13, 0.15, -0.06, 0.34, 0, 0.23);
+    context.bezierCurveTo(0.06, 0.34, 0.13, 0.15, 0.24, 0.23);
+    context.moveTo(-0.26, 0.58);
+    context.lineTo(0.26, 0.58);
+    context.moveTo(-0.26, 0.7);
+    context.lineTo(0.26, 0.7);
+    context.moveTo(-0.2, 0.82);
+    context.lineTo(0.2, 0.82);
     return true;
   }
   if (maskId !== "book") return false;
@@ -121,13 +147,9 @@ export function traceMaskDetail(context, maskId) {
   return true;
 }
 
-function isInsideEllipse(x, y, centerX, centerY, radiusX, radiusY) {
-  return ((x - centerX) / radiusX) ** 2 + ((y - centerY) / radiusY) ** 2 <= 1;
-}
-
 function isInsidePathMask(maskId, x, y) {
-  let polygon = LOCAL_PATH_POLYGON_CACHE.get(maskId);
-  if (!polygon) {
+  let pathIndex = LOCAL_PATH_INDEX_CACHE.get(maskId);
+  if (!pathIndex) {
     const commands = [];
     const context = {
       moveTo: (...args) => commands.push(["moveTo", ...args]),
@@ -136,10 +158,48 @@ function isInsidePathMask(maskId, x, y) {
       closePath: () => {},
     };
     traceMaskPath(context, maskId);
-    polygon = flattenMaskPath(commands);
-    LOCAL_PATH_POLYGON_CACHE.set(maskId, polygon);
+    const polygon = flattenMaskPath(commands, 128);
+    pathIndex = createPathIndex(polygon);
+    LOCAL_PATH_INDEX_CACHE.set(maskId, pathIndex);
   }
-  return isInsidePolygon(x, y, polygon);
+  return isInsideIndexedPolygon(x, y, pathIndex);
+}
+
+function createPathIndex(points) {
+  const buckets = Array.from({ length: PATH_BUCKET_COUNT }, () => []);
+  const edges = [];
+  for (let index = 0, previous = points.length - 1; index < points.length; previous = index, index += 1) {
+    const [currentX, currentY] = points[index];
+    const [previousX, previousY] = points[previous];
+    if (currentY === previousY) continue;
+    const edgeIndex = edges.length;
+    edges.push([currentX, currentY, previousX, previousY]);
+    const minY = Math.max(Math.min(currentY, previousY), PATH_MIN_Y);
+    const maxY = Math.min(Math.max(currentY, previousY), PATH_MAX_Y);
+    const firstBucket = Math.max(0, Math.floor(((minY - PATH_MIN_Y) / (PATH_MAX_Y - PATH_MIN_Y)) * PATH_BUCKET_COUNT));
+    const lastBucket = Math.min(
+      PATH_BUCKET_COUNT - 1,
+      Math.floor(((maxY - PATH_MIN_Y) / (PATH_MAX_Y - PATH_MIN_Y)) * PATH_BUCKET_COUNT),
+    );
+    for (let bucket = firstBucket; bucket <= lastBucket; bucket += 1) buckets[bucket].push(edgeIndex);
+  }
+  return { buckets, edges };
+}
+
+function isInsideIndexedPolygon(x, y, pathIndex) {
+  if (y < PATH_MIN_Y || y > PATH_MAX_Y) return false;
+  const bucket = Math.min(
+    PATH_BUCKET_COUNT - 1,
+    Math.max(0, Math.floor(((y - PATH_MIN_Y) / (PATH_MAX_Y - PATH_MIN_Y)) * PATH_BUCKET_COUNT)),
+  );
+  let inside = false;
+  for (const edgeIndex of pathIndex.buckets[bucket]) {
+    const [currentX, currentY, previousX, previousY] = pathIndex.edges[edgeIndex];
+    const crossesRay = (currentY > y) !== (previousY > y)
+      && x < ((previousX - currentX) * (y - currentY)) / (previousY - currentY) + currentX;
+    if (crossesRay) inside = !inside;
+  }
+  return inside;
 }
 
 function flattenMaskPath(commands, steps = 12) {
@@ -164,13 +224,6 @@ function flattenMaskPath(commands, steps = 12) {
     }
   }
   return points;
-}
-
-function isInsideLightbulb(x, y) {
-  const bulb = isInsideEllipse(x, y, 0, -0.2, 0.78, 0.76);
-  const neck = isInsideEllipse(x, y, 0, 0.34, 0.4, 0.54);
-  const socket = Math.abs(x) <= 0.32 && y >= 0.52 && y <= 0.88;
-  return bulb || neck || socket;
 }
 
 function isInsideTriangle(x, y, [ax, ay], [bx, by], [cx, cy]) {
@@ -214,62 +267,74 @@ function traceHeartPath(context) {
 }
 
 function traceButterflyPath(context) {
-  context.moveTo(0, -0.64);
-  context.bezierCurveTo(-0.12, -0.8, -0.38, -0.98, -0.64, -0.9);
-  context.bezierCurveTo(-0.88, -0.84, -1, -0.58, -0.9, -0.3);
-  context.bezierCurveTo(-0.82, -0.24, -0.5, -0.04, -0.18, -0.02);
-  context.bezierCurveTo(-0.42, 0.04, -0.74, 0.2, -0.78, 0.42);
-  context.bezierCurveTo(-0.76, 0.68, -0.5, 0.82, -0.28, 0.72);
-  context.bezierCurveTo(-0.14, 0.66, -0.07, 0.54, 0, 0.42);
-  context.bezierCurveTo(0.07, 0.54, 0.14, 0.66, 0.28, 0.72);
-  context.bezierCurveTo(0.5, 0.82, 0.76, 0.68, 0.78, 0.42);
-  context.bezierCurveTo(0.74, 0.2, 0.42, 0.04, 0.18, -0.02);
-  context.bezierCurveTo(0.5, -0.04, 0.82, -0.24, 0.9, -0.3);
-  context.bezierCurveTo(1, -0.58, 0.88, -0.84, 0.64, -0.9);
-  context.bezierCurveTo(0.38, -0.98, 0.12, -0.8, 0, -0.64);
+  context.moveTo(0, -0.16);
+  context.bezierCurveTo(-0.14, -0.48, -0.5, -0.94, -0.78, -0.9);
+  context.bezierCurveTo(-0.98, -0.87, -1, -0.64, -0.94, -0.46);
+  context.bezierCurveTo(-0.91, -0.32, -0.8, -0.25, -0.66, -0.16);
+  context.bezierCurveTo(-0.85, -0.08, -0.97, 0.08, -0.96, 0.27);
+  context.bezierCurveTo(-0.87, 0.5, -0.68, 0.68, -0.47, 0.69);
+  context.bezierCurveTo(-0.25, 0.7, -0.12, 0.54, 0, 0.34);
+  context.bezierCurveTo(0.12, 0.54, 0.25, 0.7, 0.47, 0.69);
+  context.bezierCurveTo(0.68, 0.68, 0.87, 0.5, 0.96, 0.27);
+  context.bezierCurveTo(0.97, 0.08, 0.85, -0.08, 0.66, -0.16);
+  context.bezierCurveTo(0.8, -0.25, 0.91, -0.32, 0.94, -0.46);
+  context.bezierCurveTo(1, -0.64, 0.98, -0.87, 0.78, -0.9);
+  context.bezierCurveTo(0.5, -0.94, 0.14, -0.48, 0, -0.16);
 }
 
 function traceLeafPath(context) {
-  context.moveTo(0.76, -0.8);
-  context.bezierCurveTo(0.24, -0.88, -0.62, -0.68, -0.98, -0.12);
-  context.bezierCurveTo(-1.04, 0.1, -0.9, 0.44, -0.62, 0.58);
-  context.bezierCurveTo(-0.46, 0.68, -0.3, 0.68, -0.18, 0.64);
-  context.bezierCurveTo(-0.22, 0.78, -0.27, 0.94, -0.3, 1.05);
-  context.bezierCurveTo(-0.33, 1.12, -0.28, 1.18, -0.23, 1.13);
-  context.bezierCurveTo(-0.14, 0.98, -0.13, 0.8, -0.14, 0.63);
-  context.bezierCurveTo(0.36, 0.72, 0.78, 0.5, 1.04, 0.08);
-  context.bezierCurveTo(1.12, -0.2, 1.04, -0.58, 0.76, -0.8);
+  context.moveTo(0.9, -0.88);
+  context.bezierCurveTo(0.66, -0.84, 0.49, -0.78, 0.34, -0.71);
+  context.bezierCurveTo(0.26, -0.79, 0.18, -0.82, 0.1, -0.78);
+  context.bezierCurveTo(0.03, -0.75, 0, -0.69, -0.02, -0.62);
+  context.bezierCurveTo(-0.11, -0.68, -0.2, -0.7, -0.27, -0.64);
+  context.bezierCurveTo(-0.34, -0.59, -0.36, -0.52, -0.37, -0.44);
+  context.bezierCurveTo(-0.46, -0.49, -0.55, -0.49, -0.61, -0.43);
+  context.bezierCurveTo(-0.67, -0.36, -0.68, -0.29, -0.68, -0.21);
+  context.bezierCurveTo(-0.77, -0.25, -0.85, -0.22, -0.89, -0.14);
+  context.bezierCurveTo(-0.93, -0.05, -0.9, 0.03, -0.86, 0.1);
+  context.bezierCurveTo(-0.93, 0.12, -0.98, 0.19, -0.96, 0.27);
+  context.bezierCurveTo(-0.94, 0.37, -0.85, 0.43, -0.75, 0.45);
+  context.bezierCurveTo(-0.82, 0.52, -0.84, 0.61, -0.79, 0.68);
+  context.bezierCurveTo(-0.72, 0.78, -0.6, 0.78, -0.5, 0.73);
+  context.bezierCurveTo(-0.47, 0.83, -0.47, 0.92, -0.5, 0.99);
+  context.bezierCurveTo(-0.47, 1, -0.42, 1, -0.39, 0.98);
+  context.bezierCurveTo(-0.37, 0.9, -0.38, 0.82, -0.4, 0.73);
+  context.bezierCurveTo(-0.28, 0.77, -0.15, 0.74, -0.05, 0.68);
+  context.bezierCurveTo(0.02, 0.63, 0.08, 0.56, 0.14, 0.5);
+  context.bezierCurveTo(0.08, 0.48, 0.1, 0.42, 0.2, 0.36);
+  context.bezierCurveTo(0.26, 0.33, 0.31, 0.26, 0.28, 0.2);
+  context.bezierCurveTo(0.36, 0.2, 0.41, 0.12, 0.39, 0.03);
+  context.bezierCurveTo(0.48, 0.1, 0.55, 0.04, 0.52, -0.03);
+  context.bezierCurveTo(0.62, -0.17, 0.67, -0.26, 0.65, -0.34);
+  context.bezierCurveTo(0.74, -0.38, 0.79, -0.48, 0.76, -0.56);
+  context.bezierCurveTo(0.84, -0.62, 0.88, -0.75, 0.9, -0.88);
 }
 
 function traceLightbulbPath(context) {
-  context.moveTo(0, -0.96);
-  context.bezierCurveTo(-0.5, -0.96, -0.82, -0.62, -0.82, -0.2);
-  context.bezierCurveTo(-0.82, 0.12, -0.66, 0.29, -0.46, 0.47);
-  context.bezierCurveTo(-0.4, 0.56, -0.38, 0.62, -0.36, 0.7);
-  context.lineTo(-0.36, 0.84);
-  context.bezierCurveTo(-0.36, 0.92, -0.29, 0.96, -0.2, 0.96);
-  context.lineTo(0.2, 0.96);
-  context.bezierCurveTo(0.29, 0.96, 0.36, 0.92, 0.36, 0.84);
-  context.lineTo(0.36, 0.7);
-  context.bezierCurveTo(0.38, 0.62, 0.4, 0.56, 0.46, 0.47);
-  context.bezierCurveTo(0.66, 0.29, 0.82, 0.12, 0.82, -0.2);
-  context.bezierCurveTo(0.82, -0.62, 0.5, -0.96, 0, -0.96);
+  context.moveTo(0, -0.86);
+  context.bezierCurveTo(-0.47, -0.86, -0.76, -0.57, -0.76, -0.2);
+  context.bezierCurveTo(-0.76, 0.08, -0.63, 0.25, -0.46, 0.4);
+  context.bezierCurveTo(-0.37, 0.48, -0.34, 0.56, -0.33, 0.64);
+  context.lineTo(-0.33, 0.82);
+  context.bezierCurveTo(-0.33, 0.89, -0.26, 0.92, -0.18, 0.92);
+  context.lineTo(0.18, 0.92);
+  context.bezierCurveTo(0.26, 0.92, 0.33, 0.89, 0.33, 0.82);
+  context.lineTo(0.33, 0.64);
+  context.bezierCurveTo(0.34, 0.56, 0.37, 0.48, 0.46, 0.4);
+  context.bezierCurveTo(0.63, 0.25, 0.76, 0.08, 0.76, -0.2);
+  context.bezierCurveTo(0.76, -0.57, 0.47, -0.86, 0, -0.86);
 }
 
 function traceCloudPath(context) {
-  context.moveTo(-0.94, 0.45);
-  context.bezierCurveTo(-1, 0.28, -0.98, 0.04, -0.88, -0.06);
-  context.bezierCurveTo(-0.98, -0.2, -0.9, -0.48, -0.7, -0.54);
-  context.bezierCurveTo(-0.62, -0.68, -0.4, -0.72, -0.28, -0.54);
-  context.bezierCurveTo(-0.24, -0.86, -0.14, -1.08, 0, -1.08);
-  context.bezierCurveTo(0.14, -1.08, 0.24, -0.86, 0.3, -0.56);
-  context.bezierCurveTo(0.4, -0.74, 0.56, -0.74, 0.64, -0.54);
-  context.bezierCurveTo(0.84, -0.58, 0.96, -0.3, 0.88, -0.06);
-  context.bezierCurveTo(1, 0.08, 1, 0.3, 0.9, 0.44);
-  context.bezierCurveTo(0.78, 0.7, 0.46, 0.76, 0.16, 0.68);
-  context.bezierCurveTo(-0.16, 0.76, -0.5, 0.76, -0.8, 0.62);
-  context.bezierCurveTo(-0.9, 0.6, -0.96, 0.56, -0.96, 0.5);
-  context.bezierCurveTo(-0.96, 0.48, -0.96, 0.46, -0.94, 0.45);
+  context.moveTo(-0.92, 0.44);
+  context.bezierCurveTo(-0.99, 0.28, -0.98, 0.06, -0.86, -0.04);
+  context.bezierCurveTo(-0.84, -0.31, -0.66, -0.52, -0.43, -0.49);
+  context.bezierCurveTo(-0.26, -0.79, 0.12, -0.79, 0.27, -0.47);
+  context.bezierCurveTo(0.39, -0.61, 0.62, -0.58, 0.7, -0.34);
+  context.bezierCurveTo(0.94, -0.35, 1, -0.08, 0.91, 0.1);
+  context.bezierCurveTo(1, 0.2, 0.98, 0.36, 0.88, 0.44);
+  context.lineTo(-0.92, 0.44);
 }
 
 function traceBookPath(context) {

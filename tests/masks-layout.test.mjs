@@ -16,7 +16,7 @@ test("new classroom masks expose recognizable connected interiors", () => {
   const height = 500;
   const insidePoints = {
     butterfly: [[0, 0], [-0.24, -0.18], [0.24, -0.18], [-0.2, 0.22], [0.2, 0.22]],
-    leaf: [[0, 0], [-0.45, 0], [0.45, 0]],
+    leaf: [[0, 0], [-0.3, 0], [0.3, 0]],
     lightbulb: [[0, -0.28], [0, 0], [0, 0.58]],
     cloud: [[0, -0.32], [-0.42, 0], [0.42, 0], [0, 0.3]],
   };
@@ -29,11 +29,11 @@ test("new classroom masks expose recognizable connected interiors", () => {
   }
 });
 
-test("leaf keeps a tall physical silhouette without losing practical area", () => {
+test("leaf keeps a long diagonal silhouette without losing practical area", () => {
   const { halfWidth, halfHeight } = getMaskBounds("leaf", 1200, 500);
-  assert.ok(halfHeight / halfWidth >= 0.62, "leaf physical bounds should read as a diagonal leaf");
+  assert.ok(halfWidth / halfHeight >= 2.3 && halfWidth / halfHeight <= 2.7, "leaf keeps the requested long diagonal proportion");
   const area = halfWidth * halfHeight;
-  assert.ok(area >= 50000 && area <= 80000, "leaf bounds should preserve practical word area");
+  assert.ok(area >= 70000 && area <= 120000, "leaf bounds should preserve practical word area");
 });
 
 test("layout is deterministic and remains inside the selected mask", () => {
@@ -210,10 +210,10 @@ test("new mask paths are closed and contain sampled internal boundary points", (
   const width = 1200;
   const height = 500;
   const samples = {
-    butterfly: [[-0.4, -0.855], [0.4, -0.855], [-0.72, 0.3], [0.72, 0.3]],
-    leaf: [[0, -0.64], [0, 0.64], [-0.98, 0], [0.98, 0]],
-    lightbulb: [[0, -0.95], [-0.3, 0.87], [0.3, 0.87]],
-    cloud: [[0, -0.99], [-0.8, 0.3], [0.8, 0.3], [0, 0.7]],
+    butterfly: [[-0.58, -0.48], [0.58, -0.48], [-0.5, 0.42], [0.5, 0.42]],
+    leaf: [[0, 0], [-0.45, 0], [0.45, 0], [-0.4, 0.6]],
+    lightbulb: [[0, -0.66], [-0.3, 0.72], [0.3, 0.72]],
+    cloud: [[0, -0.6], [-0.8, 0.2], [0.8, 0.2], [0, 0.3]],
   };
 
   for (const [maskId, points] of Object.entries(samples)) {
@@ -226,7 +226,7 @@ test("new mask paths are closed and contain sampled internal boundary points", (
     assert.equal(commands.at(-1)?.[0], "closePath", `${maskId}: closed path`);
 
     const bounds = getMaskBounds(maskId, width, height);
-    const polygon = flattenPath(commands);
+    const polygon = flattenPath(commands, 128);
     for (const [localX, localY] of points) {
       const x = localX * (2 * bounds.halfWidth) / width;
       const y = localY * (2 * bounds.halfHeight) / height;
@@ -290,66 +290,7 @@ test("playful mask paths keep rounded lobes, a tilted leaf, and friendly details
   assert.ok(bulbDetails.filter(([method]) => method === "bezierCurveTo").length >= 2, "bulb has a rounded heart filament");
   assert.ok(bulbDetails.filter(([method]) => method === "lineTo").length >= 2, "bulb has socket lines");
 
-  assert.ok(pathCommands("cloud").filter(([method]) => method === "bezierCurveTo").length >= 12, "cloud has four rounded peaks");
-});
-
-test("leaf petiole placement stays inside the exact path at the body junction", () => {
-  const commands = [];
-  const context = new Proxy({}, {
-    get: (_, method) => (...args) => commands.push([method, ...args]),
-  });
-  traceMaskPath(context, "leaf");
-  const polygon = flattenPath(commands, 192);
-  const width = 1200;
-  const height = 500;
-  const bounds = getMaskBounds("leaf", width, height);
-  const toApiPoint = (localX, localY) => [
-    localX * (2 * bounds.halfWidth) / width,
-    localY * (2 * bounds.halfHeight) / height,
-  ];
-  for (const [localX, localY] of [[-0.22, 0.68], [-0.1028595, 0.6807138]]) {
-    const [reportedX, reportedY] = toApiPoint(localX, localY);
-    assert.equal(isInsideMask("leaf", reportedX, reportedY, width, height), false, `reported leak ${localX},${localY} is excluded`);
-  }
-
-  for (let xIndex = 0; xIndex <= 88; xIndex += 1) {
-    const localX = -0.32 + xIndex * 0.0025;
-    for (let yIndex = 0; yIndex <= 56; yIndex += 1) {
-      const localY = 0.62 + yIndex * 0.0025;
-      const [x, y] = toApiPoint(localX, localY);
-      if (isInsideMask("leaf", x, y, width, height)) {
-        assert.equal(isPointInPolygon(localX, localY, polygon), true, `leaf junction containment ${localX},${localY}`);
-      }
-    }
-  }
-});
-
-test("leaf placement boundary stays inside the high-resolution visible path", () => {
-  const width = 1200;
-  const height = 500;
-  const bounds = getMaskBounds("leaf", width, height);
-  const polygon = flattenPath(capturePath("leaf"), 256);
-  const toApiPoint = (localX, localY) => [
-    localX * (2 * bounds.halfWidth) / width,
-    localY * (2 * bounds.halfHeight) / height,
-  ];
-
-  for (let direction = 0; direction < 2048; direction += 1) {
-    const angle = (direction * Math.PI * 2) / 2048;
-    const unitX = Math.cos(angle);
-    const unitY = Math.sin(angle);
-    let low = 0;
-    let high = 1.5;
-    for (let iteration = 0; iteration < 24; iteration += 1) {
-      const radius = (low + high) / 2;
-      const [x, y] = toApiPoint(unitX * radius, unitY * radius);
-      if (isInsideMask("leaf", x, y, width, height)) low = radius;
-      else high = radius;
-    }
-    const localX = unitX * low;
-    const localY = unitY * low;
-    assert.equal(isPointInPolygon(localX, localY, polygon), true, `leaf boundary direction ${direction}`);
-  }
+  assert.ok(pathCommands("cloud").filter(([method]) => method === "bezierCurveTo").length >= 6, "cloud has three rounded peaks");
 });
 
 test("leaf placement region has exactly one sampled connected component", () => {
@@ -406,15 +347,6 @@ test("leaf placement region has exactly one sampled connected component", () => 
   const sampledCount = inside.reduce((count, value) => count + value, 0);
   assert.equal(visitedCount, sampledCount, "leaf placement samples form one component");
 });
-
-function capturePath(maskId) {
-  const commands = [];
-  const context = new Proxy({}, {
-    get: (_, method) => (...args) => commands.push([method, ...args]),
-  });
-  traceMaskPath(context, maskId);
-  return commands;
-}
 
 function flattenPath(commands, steps = 24) {
   const points = [];

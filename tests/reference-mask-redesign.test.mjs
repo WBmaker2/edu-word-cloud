@@ -1,0 +1,204 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { getMaskBounds, isInsideMask, traceMaskDetail, traceMaskPath } from "../app/lib/masks.mjs";
+
+const WIDTH = 1200;
+const HEIGHT = 500;
+
+function capturePath(maskId) {
+  const commands = [];
+  const context = new Proxy({}, {
+    get: (_, method) => (...args) => commands.push([method, ...args]),
+  });
+  traceMaskPath(context, maskId);
+  return commands;
+}
+
+function flattenPath(commands, steps = 48) {
+  const points = [];
+  let current = null;
+  for (const [method, ...args] of commands) {
+    if (method === "moveTo" || method === "lineTo") {
+      current = [args[0], args[1]];
+      points.push(current);
+    } else if (method === "bezierCurveTo" && current) {
+      const [c1x, c1y, c2x, c2y, endX, endY] = args;
+      const [startX, startY] = current;
+      for (let index = 1; index <= steps; index += 1) {
+        const t = index / steps;
+        const inverse = 1 - t;
+        points.push([
+          inverse ** 3 * startX + 3 * inverse ** 2 * t * c1x + 3 * inverse * t ** 2 * c2x + t ** 3 * endX,
+          inverse ** 3 * startY + 3 * inverse ** 2 * t * c1y + 3 * inverse * t ** 2 * c2y + t ** 3 * endY,
+        ]);
+      }
+      current = [endX, endY];
+    }
+  }
+  return points;
+}
+
+function inPolygon(x, y, polygon) {
+  let inside = false;
+  for (let index = 0, previous = polygon.length - 1; index < polygon.length; previous = index, index += 1) {
+    const [x1, y1] = polygon[index];
+    const [x2, y2] = polygon[previous];
+    if ((y1 > y) !== (y2 > y) && x < ((x2 - x1) * (y - y1)) / (y2 - y1) + x1) inside = !inside;
+  }
+  return inside;
+}
+
+function inside(maskId, [localX, localY]) {
+  const bounds = getMaskBounds(maskId, WIDTH, HEIGHT);
+  return isInsideMask(
+    maskId,
+    localX * (2 * bounds.halfWidth) / WIDTH,
+    localY * (2 * bounds.halfHeight) / HEIGHT,
+    WIDTH,
+    HEIGHT,
+  );
+}
+
+test("reference silhouettes preserve the four requested landmarks", () => {
+  assert.equal(inside("butterfly", [-0.58, -0.48]), true);
+  assert.equal(inside("butterfly", [0.58, -0.48]), true);
+  assert.equal(inside("butterfly", [-0.5, 0.42]), true);
+  assert.equal(inside("butterfly", [0.5, 0.42]), true);
+  assert.equal(inside("butterfly", [0, 0.78]), false, "bottom V notch");
+
+  assert.equal(inside("leaf", [0.84, -0.7]), true, "pointed tip");
+  assert.equal(inside("leaf", [-0.72, 0.62]), true, "blade base");
+  assert.equal(inside("leaf", [-0.96, 0.92]), false, "petiole is narrow");
+
+  assert.equal(inside("lightbulb", [0, -0.66]), true, "bulb dome");
+  assert.equal(inside("lightbulb", [0, 0.72]), true, "socket");
+  assert.equal(inside("lightbulb", [0.72, 0.2]), false, "rays are not placement area");
+
+  assert.equal(inside("cloud", [-0.55, -0.34]), true, "large left dome");
+  assert.equal(inside("cloud", [0.16, -0.42]), true, "small upper dome");
+  assert.equal(inside("cloud", [0.66, -0.16]), true, "right dome");
+  assert.equal(inside("cloud", [0, 0.58]), false, "flat baseline stays above bounds");
+});
+
+test("all four placement regions are derived from their traced path", () => {
+  for (const maskId of ["butterfly", "leaf", "lightbulb", "cloud"]) {
+    const polygon = flattenPath(capturePath(maskId), maskId === "leaf" ? 64 : 24);
+    assert.ok(polygon.length > 20, `${maskId} has a detailed path`);
+    assert.ok(capturePath(maskId).some(([method]) => method === "closePath"), `${maskId} closes`);
+    for (let xIndex = -20; xIndex <= 20; xIndex += 1) {
+      for (let yIndex = -20; yIndex <= 20; yIndex += 1) {
+        const localX = xIndex / 20;
+        const localY = yIndex / 20;
+        assert.equal(
+          inside(maskId, [localX, localY]),
+          inPolygon(localX, localY, polygon),
+          `${maskId} path mismatch at ${localX},${localY}`,
+        );
+      }
+    }
+  }
+});
+
+test("bulb rays are detail-only and stay inside the canvas detail box", () => {
+  const commands = [];
+  const context = new Proxy({}, {
+    get: (_, method) => (...args) => commands.push([method, ...args]),
+  });
+  assert.equal(traceMaskDetail(context, "lightbulb"), true);
+  const movePoints = commands
+    .filter(([method]) => method === "moveTo")
+    .map(([, x, y]) => [x, y])
+    .filter(([x, y]) => Math.abs(x) >= 0.6 || y <= -0.78);
+  assert.equal(movePoints.length, 7, "seven light rays");
+  assert.ok(movePoints.every(([x, y]) => Math.abs(x) <= 0.94 && Math.abs(y) <= 0.94));
+  assert.ok(commands.some(([method]) => method === "lineTo"), "socket lines are included");
+});
+
+test("leaf has serrations on both edges and veins branching both ways", () => {
+  const path = capturePath("leaf").filter(([method]) => method === "bezierCurveTo");
+  const endpoints = path.map(([, , , , , endX]) => endX);
+  const descending = endpoints.filter((endX, index) => endX < (index ? endpoints[index - 1] : 0.9));
+  const ascending = endpoints.filter((endX, index) => endX > (index ? endpoints[index - 1] : -0.5));
+  assert.ok(descending.length >= 5, "one edge has at least five soft teeth");
+  assert.ok(ascending.length >= 5, "the opposite edge has at least five soft teeth");
+
+  const commands = [];
+  const context = new Proxy({}, {
+    get: (_, method) => (...args) => commands.push([method, ...args]),
+  });
+  traceMaskDetail(context, "leaf");
+  const branchDirections = commands.flatMap(([method, ...args], index) => {
+    if (method !== "lineTo") return [];
+    const previous = commands[index - 1];
+    return previous?.[0] === "moveTo" ? [Math.sign(args[0] - previous[1])] : [];
+  });
+  assert.ok(branchDirections.some((direction) => direction < 0), "veins branch left");
+  assert.ok(branchDirections.some((direction) => direction > 0), "veins branch right");
+});
+
+test("reference silhouettes keep practical proportions on the 1200 by 500 canvas", () => {
+  const butterfly = getMaskBounds("butterfly", WIDTH, HEIGHT);
+  const leaf = getMaskBounds("leaf", WIDTH, HEIGHT);
+  const cloud = getMaskBounds("cloud", WIDTH, HEIGHT);
+  assert.ok(butterfly.halfWidth * 2 / (butterfly.halfHeight * 2) >= 1.45);
+  assert.ok(butterfly.halfWidth * 2 / (butterfly.halfHeight * 2) <= 1.6);
+  assert.ok(leaf.halfWidth * 2 / (leaf.halfHeight * 2) >= 2.3);
+  assert.ok(leaf.halfWidth * 2 / (leaf.halfHeight * 2) <= 2.7);
+  assert.ok(cloud.halfWidth * 2 / (cloud.halfHeight * 2) >= 1.55);
+  assert.ok(cloud.halfWidth * 2 / (cloud.halfHeight * 2) <= 1.75);
+});
+
+test("placement never leaks beyond the high-resolution visible reference path", () => {
+  for (const maskId of ["butterfly", "leaf", "lightbulb", "cloud"]) {
+    const visiblePolygon = flattenPath(capturePath(maskId), 256);
+    for (let xIndex = -40; xIndex <= 40; xIndex += 1) {
+      for (let yIndex = -40; yIndex <= 40; yIndex += 1) {
+        const localX = xIndex / 40;
+        const localY = yIndex / 40;
+        if (inside(maskId, [localX, localY])) {
+          assert.equal(inPolygon(localX, localY, visiblePolygon), true, `${maskId} grid leak ${localX},${localY}`);
+        }
+      }
+    }
+  }
+
+  const maskId = "leaf";
+  const bounds = getMaskBounds(maskId, WIDTH, HEIGHT);
+  const visiblePolygon = flattenPath(capturePath(maskId), 256);
+  const toLocalPoint = (radius, angle) => [radius * Math.cos(angle), radius * Math.sin(angle)];
+  for (let direction = 0; direction < 2048; direction += 1) {
+    const angle = direction * Math.PI * 2 / 2048;
+    let low = 0;
+    let high = 1.2;
+    for (let iteration = 0; iteration < 22; iteration += 1) {
+      const radius = (low + high) / 2;
+      const [localX, localY] = toLocalPoint(radius, angle);
+      const x = localX * (2 * bounds.halfWidth) / WIDTH;
+      const y = localY * (2 * bounds.halfHeight) / HEIGHT;
+      if (isInsideMask(maskId, x, y, WIDTH, HEIGHT)) low = radius;
+      else high = radius;
+    }
+    const [localX, localY] = toLocalPoint(Math.max(0, low - 0.002), angle);
+    assert.equal(inPolygon(localX, localY, visiblePolygon), true, `leaf radial containment ${direction}`);
+  }
+
+  for (const radialMask of ["butterfly", "lightbulb", "cloud"]) {
+    const radialBounds = getMaskBounds(radialMask, WIDTH, HEIGHT);
+    const radialPolygon = flattenPath(capturePath(radialMask), 256);
+    for (let direction = 0; direction < 512; direction += 1) {
+      const angle = direction * Math.PI * 2 / 512;
+      let low = 0;
+      let high = 1.2;
+      for (let iteration = 0; iteration < 20; iteration += 1) {
+        const radius = (low + high) / 2;
+        const [localX, localY] = toLocalPoint(radius, angle);
+        const x = localX * (2 * radialBounds.halfWidth) / WIDTH;
+        const y = localY * (2 * radialBounds.halfHeight) / HEIGHT;
+        if (isInsideMask(radialMask, x, y, WIDTH, HEIGHT)) low = radius;
+        else high = radius;
+      }
+      const [localX, localY] = toLocalPoint(Math.max(0, low - 0.002), angle);
+      assert.equal(inPolygon(localX, localY, radialPolygon), true, `${radialMask} radial containment ${direction}`);
+    }
+  }
+});
