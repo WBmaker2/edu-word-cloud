@@ -44,7 +44,7 @@ test("server-renders the teacher word cloud classroom", async () => {
       new RegExp(`<svg class="setting-icon setting-icon--${maskId}"[^>]*\\bwidth="36"[^>]*\\bheight="30"`),
     );
   }
-  assert.match(html, /<button[^>]*title="2026-08-31 — 입력 변경을 다시 만들기 전까지 보류하고, 단어표 펼침·가독성 안내·PNG 요약을 개선"/);
+  assert.match(html, /<button[^>]*title="2026-08-31 — GitHub Pages 하위 경로에서도 앱 자산과 파비콘이 안정적으로 열리도록 정적 배포 경로를 보정/);
   assert.match(html, /setting-icon__detail/);
   assert.doesNotMatch(html, /data-latest-update/);
   for (const starterMarker of [

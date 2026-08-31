@@ -16,7 +16,9 @@ async function prepareStaticSite() {
 
 async function writePage(filename) {
   const source = await readFile(resolve(prerenderDirectory, filename), "utf8");
-  const page = source.replaceAll('"/assets/', '"./assets/');
+  const page = source
+    .replaceAll('"/assets/', '"./assets/')
+    .replaceAll('"/favicon.svg', '"./favicon.svg');
   await writeFile(resolve(outputDirectory, filename), page);
 }
 

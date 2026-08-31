@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 type InfoDialogProps = { type: "help" | "updates"; onClose: () => void };
 
 export const UPDATE_HISTORY = [
+  "2026-08-31 — GitHub Pages 하위 경로에서도 앱 자산과 파비콘이 안정적으로 열리도록 정적 배포 경로를 보정",
   "2026-08-31 — 입력 변경을 다시 만들기 전까지 보류하고, 단어표 펼침·가독성 안내·PNG 요약을 개선",
   "2026-08-26 — 첨부 이미지 기준으로 나비·나뭇잎·전구·구름 마스크의 외곽선과 아이콘을 다시 그리고, 단어 배치 영역을 외곽 경로와 일치시킴",
   "2026-08-25 — 초등학생이 좋아할 만한 무료 한글 글꼴 '동글동글 주아'와 '또박또박 고운돋움' 2종을 추가",
