@@ -1,5 +1,12 @@
 export const MASK_IDS = ["circle", "bubble", "heart", "star", "book", "butterfly", "leaf", "lightbulb", "cloud"];
 
+export const MASK_VISUAL_STYLES = Object.freeze({
+  butterfly: Object.freeze({ stroke: "#7098df", fill: "#eaf2ff" }),
+  leaf: Object.freeze({ stroke: "#73b393", fill: "#e8f7ef" }),
+  lightbulb: Object.freeze({ stroke: "#e5aa3f", fill: "#fff4c9" }),
+  cloud: Object.freeze({ stroke: "#8eaddf", fill: "#fffdf8" }),
+});
+
 const STAR_POINTS = Array.from({ length: 10 }, (_, index) => {
   const angle = -Math.PI / 2 + index * (Math.PI / 5);
   const radius = index % 2 === 0 ? 0.94 : 0.42;
@@ -11,16 +18,66 @@ const PATH_BUCKET_COUNT = 128;
 const PATH_MIN_Y = -1.1;
 const PATH_MAX_Y = 1.1;
 
+const LEAF_TIP = Object.freeze([0.86, -0.9]);
+const LEAF_PETIOLE_TIP = Object.freeze([-0.73, 0.88]);
+const LEAF_BLADE_BASE = Object.freeze([-0.5, 0.58]);
+const LEAF_OUTLINE_COMMANDS = Object.freeze([
+  ["M", LEAF_TIP],
+  ["C", Object.freeze([0.44, -0.86, -0.26, -0.58, -0.68, -0.14])],
+  ["C", Object.freeze([-0.9, 0.1, -0.86, 0.4, -0.62, 0.58])],
+  ["C", Object.freeze([-0.55, 0.63, -0.47, 0.64, -0.39, 0.61])],
+  ["C", Object.freeze([-0.08, 0.42, 0.42, 0.02, 0.69, -0.38])],
+  ["C", Object.freeze([0.84, -0.6, 0.92, -0.8, ...LEAF_TIP])],
+]);
+const LEAF_SPINE_COMMANDS = Object.freeze([
+  ["M", LEAF_PETIOLE_TIP],
+  ["C", Object.freeze([-0.64, 0.76, -0.56, 0.66, ...LEAF_BLADE_BASE])],
+  ["C", Object.freeze([-0.08, 0.36, 0.42, -0.02, 0.22, -0.16])],
+  ["C", Object.freeze([0.5, -0.47, 0.73, -0.74, ...LEAF_TIP])],
+]);
+const LEAF_BRANCHES = Object.freeze([
+  Object.freeze([Object.freeze([-0.41, 0.53]), Object.freeze([-0.59, 0.36])]),
+  Object.freeze([Object.freeze([-0.41, 0.53]), Object.freeze([-0.45, 0.61])]),
+  Object.freeze([Object.freeze([-0.2, 0.3]), Object.freeze([-0.39, 0.13])]),
+  Object.freeze([Object.freeze([-0.2, 0.3]), Object.freeze([-0.08, 0.35])]),
+  Object.freeze([Object.freeze([0.04, 0.04]), Object.freeze([-0.17, -0.15])]),
+  Object.freeze([Object.freeze([0.04, 0.04]), Object.freeze([0.16, 0.14])]),
+  Object.freeze([Object.freeze([0.31, -0.27]), Object.freeze([0.14, -0.45])]),
+  Object.freeze([Object.freeze([0.31, -0.27]), Object.freeze([0.46, -0.15])]),
+]);
+const LEAF_DETAIL_COMMANDS = Object.freeze([
+  ...LEAF_SPINE_COMMANDS,
+  ...LEAF_BRANCHES.flatMap(([start, end]) => [["M", start], ["L", end]]),
+]);
+
+export const LEAF_MASK_GEOMETRY = Object.freeze({
+  tip: LEAF_TIP,
+  bladeBase: LEAF_BLADE_BASE,
+  petioleTip: LEAF_PETIOLE_TIP,
+  outline: LEAF_OUTLINE_COMMANDS,
+  spine: LEAF_SPINE_COMMANDS,
+  branches: LEAF_BRANCHES,
+});
+
+export const LEAF_ICON_PATHS = Object.freeze({
+  outline: createLeafSvgPath(LEAF_OUTLINE_COMMANDS, true),
+  detail: createLeafSvgPath(LEAF_DETAIL_COMMANDS),
+});
+
 export function getMaskBounds(maskId, width, height) {
   const shortSide = Math.min(width, height);
 
   if (maskId === "bubble") return { halfWidth: width * 0.39, halfHeight: height * 0.36 };
   if (maskId === "book") return { halfWidth: width * 0.25, halfHeight: height * 0.42 };
-  if (maskId === "butterfly") return { halfWidth: width * 0.3, halfHeight: height * 0.46 };
-  if (maskId === "leaf") return { halfWidth: width * 0.41, halfHeight: height * 0.42 };
+  if (maskId === "butterfly") return { halfWidth: width * 0.31, halfHeight: height * 0.44 };
+  if (maskId === "leaf") return { halfWidth: width * 0.28, halfHeight: height * 0.46 };
   if (maskId === "lightbulb") return { halfWidth: shortSide * 0.34, halfHeight: shortSide * 0.45 };
-  if (maskId === "cloud") return { halfWidth: width * 0.32, halfHeight: height * 0.44 };
+  if (maskId === "cloud") return { halfWidth: width * 0.32, halfHeight: height * 0.46 };
   return { halfWidth: shortSide * 0.44, halfHeight: shortSide * 0.44 };
+}
+
+export function getMaskVisualStyle(maskId, fallbackStroke) {
+  return MASK_VISUAL_STYLES[maskId] ?? { stroke: fallbackStroke, fill: "#ffffff" };
 }
 
 export function isInsideMask(maskId, x, y, width = 2, height = 2) {
@@ -61,59 +118,29 @@ export function traceMaskPath(context, maskId) {
 
 export function traceMaskDetail(context, maskId) {
   if (maskId === "butterfly") {
-    context.moveTo(-0.03, -0.2);
-    context.bezierCurveTo(-0.1, -0.34, -0.13, 0.18, -0.08, 0.45);
-    context.bezierCurveTo(-0.05, 0.58, -0.02, 0.6, 0, 0.58);
-    context.bezierCurveTo(0.02, 0.6, 0.05, 0.58, 0.08, 0.45);
-    context.bezierCurveTo(0.13, 0.18, 0.1, -0.34, 0.03, -0.2);
-    context.moveTo(-0.02, -0.2);
-    context.bezierCurveTo(-0.06, -0.3, -0.11, -0.38, -0.17, -0.43);
-    context.moveTo(0.02, -0.2);
-    context.bezierCurveTo(0.06, -0.3, 0.11, -0.38, 0.17, -0.43);
+    context.moveTo(-0.035, -0.16);
+    context.bezierCurveTo(-0.08, 0.02, -0.08, 0.34, -0.035, 0.54);
+    context.bezierCurveTo(-0.02, 0.6, 0.02, 0.6, 0.035, 0.54);
+    context.bezierCurveTo(0.08, 0.34, 0.08, 0.02, 0.035, -0.16);
+    context.moveTo(-0.02, -0.16);
+    context.bezierCurveTo(-0.06, -0.28, -0.12, -0.36, -0.19, -0.4);
+    context.moveTo(0.02, -0.16);
+    context.bezierCurveTo(0.06, -0.28, 0.12, -0.36, 0.19, -0.4);
     return true;
   }
   if (maskId === "leaf") {
-    context.moveTo(-0.42, 0.9);
-    context.bezierCurveTo(-0.18, 0.48, 0.28, -0.1, 0.82, -0.74);
-    context.moveTo(-0.22, 0.54);
-    context.lineTo(-0.55, 0.37);
-    context.moveTo(0.02, 0.25);
-    context.lineTo(-0.3, 0.08);
-    context.moveTo(0.27, -0.05);
-    context.lineTo(-0.02, -0.25);
-    context.moveTo(0.5, -0.35);
-    context.lineTo(0.27, -0.53);
-    context.moveTo(0.02, 0.25);
-    context.lineTo(0.28, 0.1);
-    context.moveTo(0.27, -0.05);
-    context.lineTo(0.5, -0.22);
+    traceCommands(context, LEAF_DETAIL_COMMANDS);
     return true;
   }
   if (maskId === "lightbulb") {
-    // Seven rays stay outside the body path, so words never occupy the rays.
-    context.moveTo(0, -0.94);
-    context.lineTo(0, -0.76);
-    context.moveTo(-0.64, -0.78);
-    context.lineTo(-0.52, -0.66);
-    context.moveTo(0.64, -0.78);
-    context.lineTo(0.52, -0.66);
-    context.moveTo(-0.92, -0.16);
-    context.lineTo(-0.74, -0.16);
-    context.moveTo(0.92, -0.16);
-    context.lineTo(0.74, -0.16);
-    context.moveTo(-0.64, 0.48);
-    context.lineTo(-0.52, 0.36);
-    context.moveTo(0.64, 0.48);
-    context.lineTo(0.52, 0.36);
-    context.moveTo(-0.24, 0.23);
-    context.bezierCurveTo(-0.13, 0.15, -0.06, 0.34, 0, 0.23);
-    context.bezierCurveTo(0.06, 0.34, 0.13, 0.15, 0.24, 0.23);
-    context.moveTo(-0.26, 0.58);
-    context.lineTo(0.26, 0.58);
-    context.moveTo(-0.26, 0.7);
-    context.lineTo(0.26, 0.7);
-    context.moveTo(-0.2, 0.82);
-    context.lineTo(0.2, 0.82);
+    // Keep only the filament and socket lines inside the bulb silhouette.
+    context.moveTo(-0.2, 0.18);
+    context.bezierCurveTo(-0.1, 0.08, -0.05, 0.28, 0, 0.18);
+    context.bezierCurveTo(0.05, 0.28, 0.1, 0.08, 0.2, 0.18);
+    context.moveTo(-0.2, 0.66);
+    context.lineTo(0.2, 0.66);
+    context.moveTo(-0.17, 0.77);
+    context.lineTo(0.17, 0.77);
     return true;
   }
   if (maskId !== "book") return false;
@@ -235,58 +262,68 @@ function traceHeartPath(context) {
 }
 
 function traceButterflyPath(context) {
-  context.moveTo(0, -0.14);
-  context.bezierCurveTo(-0.18, -0.42, -0.48, -0.8, -0.76, -0.78);
-  context.bezierCurveTo(-0.94, -0.76, -0.94, -0.53, -0.82, -0.34);
-  context.bezierCurveTo(-0.75, -0.23, -0.64, -0.14, -0.5, -0.06);
-  context.bezierCurveTo(-0.72, -0.03, -0.91, 0.1, -0.92, 0.3);
-  context.bezierCurveTo(-0.92, 0.53, -0.7, 0.72, -0.48, 0.68);
-  context.bezierCurveTo(-0.26, 0.65, -0.12, 0.46, 0, 0.28);
-  context.bezierCurveTo(0.12, 0.46, 0.26, 0.65, 0.48, 0.68);
-  context.bezierCurveTo(0.7, 0.72, 0.92, 0.53, 0.92, 0.3);
-  context.bezierCurveTo(0.91, 0.1, 0.72, -0.03, 0.5, -0.06);
-  context.bezierCurveTo(0.64, -0.14, 0.75, -0.23, 0.82, -0.34);
-  context.bezierCurveTo(0.94, -0.53, 0.94, -0.76, 0.76, -0.78);
-  context.bezierCurveTo(0.48, -0.8, 0.18, -0.42, 0, -0.14);
+  context.moveTo(0, -0.1);
+  context.bezierCurveTo(-0.12, -0.34, -0.4, -0.8, -0.7, -0.8);
+  context.bezierCurveTo(-0.92, -0.8, -0.96, -0.56, -0.83, -0.34);
+  context.bezierCurveTo(-0.75, -0.2, -0.6, -0.1, -0.43, -0.03);
+  context.bezierCurveTo(-0.68, 0, -0.87, 0.12, -0.86, 0.36);
+  context.bezierCurveTo(-0.85, 0.6, -0.63, 0.75, -0.42, 0.64);
+  context.bezierCurveTo(-0.22, 0.54, -0.1, 0.36, 0, 0.2);
+  context.bezierCurveTo(0.1, 0.36, 0.22, 0.54, 0.42, 0.64);
+  context.bezierCurveTo(0.63, 0.75, 0.85, 0.6, 0.86, 0.36);
+  context.bezierCurveTo(0.87, 0.12, 0.68, 0, 0.43, -0.03);
+  context.bezierCurveTo(0.6, -0.1, 0.75, -0.2, 0.83, -0.34);
+  context.bezierCurveTo(0.96, -0.56, 0.92, -0.8, 0.7, -0.8);
+  context.bezierCurveTo(0.4, -0.8, 0.12, -0.34, 0, -0.1);
 }
 
 function traceLeafPath(context) {
-  context.moveTo(0.88, -0.84);
-  context.bezierCurveTo(0.5, -0.8, 0.1, -0.64, -0.22, -0.42);
-  context.bezierCurveTo(-0.52, -0.22, -0.76, 0.02, -0.84, 0.3);
-  context.bezierCurveTo(-0.9, 0.5, -0.82, 0.68, -0.58, 0.76);
-  context.bezierCurveTo(-0.53, 0.79, -0.48, 0.86, -0.49, 0.98);
-  context.bezierCurveTo(-0.45, 1.02, -0.37, 1.01, -0.34, 0.97);
-  context.bezierCurveTo(-0.34, 0.87, -0.38, 0.8, -0.34, 0.73);
-  context.bezierCurveTo(-0.08, 0.7, 0.18, 0.55, 0.4, 0.34);
-  context.bezierCurveTo(0.62, 0.13, 0.8, -0.16, 0.86, -0.48);
-  context.bezierCurveTo(0.9, -0.66, 0.9, -0.79, 0.88, -0.84);
+  traceCommands(context, LEAF_OUTLINE_COMMANDS);
+}
+
+function traceCommands(context, commands) {
+  for (const [method, points] of commands) {
+    if (method === "M") context.moveTo(...points);
+    if (method === "L") context.lineTo(...points);
+    if (method === "C") context.bezierCurveTo(...points);
+  }
+}
+
+function createLeafSvgPath(commands, close = false) {
+  const transform = (value, index) => {
+    const scaled = index % 2 === 0 ? 18 + value * 13.2 : 14.5 + value * 10.2;
+    return Math.round(scaled * 100) / 100;
+  };
+  const path = commands.map(([method, points]) => {
+    const values = points.map(transform);
+    return `${method}${values.join(" ")}`;
+  }).join(" ");
+  return close ? `${path} Z` : path;
 }
 
 function traceLightbulbPath(context) {
-  context.moveTo(0, -0.86);
-  context.bezierCurveTo(-0.48, -0.86, -0.78, -0.56, -0.78, -0.18);
-  context.bezierCurveTo(-0.78, 0.1, -0.63, 0.3, -0.45, 0.46);
-  context.bezierCurveTo(-0.35, 0.55, -0.39, 0.64, -0.38, 0.72);
-  context.lineTo(-0.38, 0.84);
-  context.bezierCurveTo(-0.38, 0.9, -0.27, 0.93, -0.16, 0.93);
-  context.lineTo(0.16, 0.93);
-  context.bezierCurveTo(0.27, 0.93, 0.38, 0.9, 0.38, 0.84);
-  context.lineTo(0.38, 0.72);
-  context.bezierCurveTo(0.39, 0.64, 0.35, 0.55, 0.45, 0.46);
-  context.bezierCurveTo(0.63, 0.3, 0.78, 0.1, 0.78, -0.18);
-  context.bezierCurveTo(0.78, -0.56, 0.48, -0.86, 0, -0.86);
+  context.moveTo(0, -0.84);
+  context.bezierCurveTo(-0.46, -0.84, -0.72, -0.56, -0.72, -0.18);
+  context.bezierCurveTo(-0.72, 0.12, -0.56, 0.34, -0.38, 0.48);
+  context.bezierCurveTo(-0.22, 0.6, -0.18, 0.66, -0.18, 0.72);
+  context.bezierCurveTo(-0.12, 0.77, -0.06, 0.79, 0, 0.79);
+  context.bezierCurveTo(0.06, 0.79, 0.12, 0.77, 0.18, 0.72);
+  context.bezierCurveTo(0.18, 0.66, 0.22, 0.6, 0.38, 0.48);
+  context.bezierCurveTo(0.56, 0.34, 0.72, 0.12, 0.72, -0.18);
+  context.bezierCurveTo(0.72, -0.56, 0.46, -0.84, 0, -0.84);
 }
 
 function traceCloudPath(context) {
-  context.moveTo(-0.9, 0.42);
-  context.bezierCurveTo(-0.98, 0.3, -0.97, 0.08, -0.82, -0.02);
-  context.bezierCurveTo(-0.8, -0.29, -0.62, -0.5, -0.4, -0.47);
-  context.bezierCurveTo(-0.2, -0.74, 0.12, -0.74, 0.29, -0.44);
-  context.bezierCurveTo(0.42, -0.58, 0.64, -0.54, 0.74, -0.28);
-  context.bezierCurveTo(0.92, -0.29, 1, -0.09, 0.91, 0.08);
-  context.bezierCurveTo(1, 0.18, 0.98, 0.34, 0.84, 0.42);
-  context.bezierCurveTo(0.6, 0.56, -0.62, 0.56, -0.9, 0.42);
+  context.moveTo(-0.9, 0.4);
+  context.bezierCurveTo(-1, 0.3, -0.98, 0.08, -0.82, 0.01);
+  context.bezierCurveTo(-0.83, -0.27, -0.63, -0.5, -0.4, -0.46);
+  context.bezierCurveTo(-0.25, -0.73, 0.1, -0.78, 0.29, -0.47);
+  context.bezierCurveTo(0.44, -0.6, 0.66, -0.54, 0.75, -0.27);
+  context.bezierCurveTo(0.93, -0.28, 1, -0.08, 0.91, 0.08);
+  context.bezierCurveTo(1, 0.2, 0.96, 0.36, 0.82, 0.42);
+  context.bezierCurveTo(0.64, 0.53, 0.34, 0.58, 0, 0.56);
+  context.bezierCurveTo(-0.34, 0.58, -0.64, 0.53, -0.82, 0.42);
+  context.bezierCurveTo(-0.85, 0.42, -0.88, 0.41, -0.9, 0.4);
 }
 
 function traceBookPath(context) {

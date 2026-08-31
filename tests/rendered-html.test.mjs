@@ -44,7 +44,7 @@ test("server-renders the teacher word cloud classroom", async () => {
       new RegExp(`<svg class="setting-icon setting-icon--${maskId}"[^>]*viewBox="0 0 36 30"[^>]*\\bwidth="36"[^>]*\\bheight="30"`),
     );
   }
-  assert.match(html, /<button[^>]*title="2026-08-31 — 9개 마스크의 선택 아이콘과 워드 배치 외곽선을 동화책 플랫 픽토그램 문법으로 통일/);
+  assert.match(html, /<button[^>]*title="2026-08-31 — 나뭇잎 마스크를 새로 그리고, 왼쪽 아래 줄기에서 오른쪽 위 잎끝까지 잎맥을 연결/);
   assert.match(html, /setting-icon__detail/);
   assert.doesNotMatch(html, /data-latest-update/);
   for (const starterMarker of [
@@ -85,6 +85,7 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
   assert.match(settings, /ChevronIcon/);
   assert.match(settings, /MaskIcon/);
   assert.match(settings, /MASK_ICON_DEFINITIONS/);
+  assert.match(settings, /LEAF_ICON_PATHS/);
   assert.doesNotMatch(settings, /glyph/);
   assert.match(settings, /bubble:\s*\{/);
   assert.match(settings, /화살표를 처음 누르면 첫 색상부터 비교해요/);
@@ -100,6 +101,9 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
     assert.match(workspace, new RegExp(example));
   }
   assert.match(dialog, /2026-08-26 — 첨부 이미지 기준으로 나비·나뭇잎·전구·구름 마스크의 외곽선과 아이콘을 다시 그리고, 단어 배치 영역을 외곽 경로와 일치시킴/);
+  assert.match(dialog, /2026-08-31 — 나뭇잎 마스크를 새로 그리고, 왼쪽 아래 줄기에서 오른쪽 위 잎끝까지 잎맥을 연결/);
+  assert.match(dialog, /2026-08-31 — 전구 바깥 빛줄기를 제거하고 나비·나뭇잎·전구·구름 마스크에 시안 색상을 적용/);
+  assert.match(dialog, /2026-08-31 — 나비·나뭇잎·전구·구름 마스크를 더 둥글고 귀여운 동화책 플랫 실루엣으로 개선/);
   assert.match(dialog, /2026-08-31 — 입력 변경을 다시 만들기 전까지 보류하고, 단어표 펼침·가독성 안내·PNG 요약을 개선/);
   assert.match(dialog, /2026-08-25 — 초등학생이 좋아할 만한 무료 한글 글꼴 '동글동글 주아'와 '또박또박 고운돋움' 2종을 추가/);
   assert.match(dialog, /2026-07-23 — 선택한 마스크 안에 단어가 배치되도록/);

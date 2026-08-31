@@ -7,6 +7,7 @@ import {
   PALETTE_OPTIONS,
   WORD_COUNT_OPTIONS,
 } from "../lib/cloud-options.mjs";
+import { getMaskVisualStyle, LEAF_ICON_PATHS } from "../lib/masks.mjs";
 import { canMovePalette, getPaletteNavigationTarget } from "../lib/palette-navigation.mjs";
 
 type Settings = {
@@ -47,23 +48,23 @@ const MASK_ICON_DEFINITIONS: Record<string, MaskIconDefinition> = {
     detail: "M18 8.5v17.2",
   },
   butterfly: {
-    paths: ["M18 13.5C15.8 8.2 11.1 3.6 7 4.3c-2.7.5-2.3 4.4.5 7.2 1 1 2.2 1.7 3.5 2.2-3.3-.8-6.4.2-6.5 2.6-.1 2.7 2.7 3.9 5.5 3.1 3.1-.8 5.8-3 8-5.7 2.2 2.7 4.9 4.9 8 5.7 2.8.8 5.6-.4 5.5-3.1-.1-2.4-3.2-3.4-6.5-2.6 1.3-.5 2.5-1.2 3.5-2.2 2.8-2.8 3.2-6.7.5-7.2-4.1-.7-8.8 3.9-11 9.2Z"],
-    detail: "M18 12v11.2M16.2 11.5c-.8-1.5-1.5-2.6-2.4-3.4M19.8 11.5c.8-1.5 1.5-2.6 2.4-3.4M16.5 24h3",
+    paths: ["M18 13.8C16.3 10.3 12.6 5.1 8.4 5.1c-2.6 0-3.5 2.4-2.2 4.8.9 1.6 2.5 2.8 4.3 3.6-3.4-.7-6.2.4-6.3 2.8-.1 2.5 2.4 4.1 5.1 3.5 3-.7 5.7-2.9 8.7-6.3 3 3.4 5.7 5.6 8.7 6.3 2.7.6 5.2-1 5.1-3.5-.1-2.4-2.9-3.5-6.3-2.8 1.8-.8 3.4-2 4.3-3.6 1.3-2.4.4-4.8-2.2-4.8-4.2 0-7.9 5.2-9.6 8.7Z"],
+    detail: "M18 13.3v10M16.3 12.8c-.6-1.1-1.1-1.9-1.9-2.4M19.7 12.8c.6-1.1 1.1-1.9 1.9-2.4M16.3 23.3h3.4",
   },
   leaf: {
-    paths: ["M31 3.7C21.4 5 13.6 7.9 8.8 13c-3.8 4-4.2 8.3-1.3 10.5 2.9 2.2 7.2.4 10.4-2.1C24 16.2 28.7 10.4 31 3.7Z"],
-    detail: "M7.6 24.3C13.4 16.9 20.7 10.2 30.3 4.4M12.1 19.3l-3.2-1M16.2 15.4l-3.1-1.4M20.6 11.6l-2.8-1.5M15.7 15.3l3 1.3M20.3 11.5l2.8 1.5M5.4 27.1l2.2-2.8",
+    paths: [LEAF_ICON_PATHS.outline],
+    detail: LEAF_ICON_PATHS.detail,
   },
   lightbulb: {
     paths: [
-      "M18 3.5a8.7 8.7 0 0 0-5.1 15.8c.8.6 1.2 1.3 1.3 2.2h7.6c.1-.9.5-1.6 1.3-2.2A8.7 8.7 0 0 0 18 3.5Z",
-      "M14.2 22h7.6v2.3h-7.6Z",
-      "M15.3 25.2h5.4v1.9h-5.4Z",
+      "M18 3.7c-5.3 0-9.2 3.5-9.2 8.3 0 3.1 1.5 5.3 3.5 6.9.8.6 1.2 1.4 1.3 2.2h8.8c.1-.8.5-1.6 1.3-2.2 2-1.6 3.5-3.8 3.5-6.9 0-4.8-3.9-8.3-9.2-8.3Z",
+      "M13.6 21.8h8.8v2.3h-8.8Z",
+      "M14.8 25.2h6.4v1.7h-6.4Z",
     ],
-    detail: "M18 2v-1.3M9.1 5.9 8.2 5M26.9 5.9l.9-.9M6.1 13H4.8M29.9 13h1.3M15.3 15.2c1.2-1.8 2.2 1.8 2.7 0 .5-1.8 1.5 1.8 2.7 0",
+    detail: "M18 2.3V1M10.5 6.5l-.9-.9M25.5 6.5l.9-.9M15.2 14.5c1.2-1.7 2.2 1.7 2.8 0 .6 1.7 1.6 1.7 2.8 0",
   },
   cloud: {
-    paths: ["M5.5 24.2a4.5 4.5 0 0 1 .8-8.9 6.8 6.8 0 0 1 12.6-2.6 5.8 5.8 0 0 1 10.7 2.2 4.5 4.5 0 0 1 .4 9.3Z"],
+    paths: ["M5.8 22.8C4.1 21.8 4.3 18.4 6.7 17.2c-.2-3.6 2.1-6.3 5.5-6.4 2.1 0 3.9 1.1 5.1 3.1 1.2-2 3.1-3.1 5.3-3.1 2.9 0 5.2 2.1 5.5 4.9 3-.3 4.7 2.8 3.3 5.4 1.7 1.2 1.3 4.3-1.1 5.1-5.7 1.8-18.1 1.8-23.7-.2Z"],
   },
 };
 
@@ -246,9 +247,10 @@ function SettingGroup({
 function MaskIcon({ maskId }: { maskId: string }) {
   const definition = MASK_ICON_DEFINITIONS[maskId];
   if (!definition) return null;
+  const visualStyle = getMaskVisualStyle(maskId, "currentColor");
 
   return (
-    <svg className={`setting-icon setting-icon--${maskId}`} viewBox="0 0 36 30" aria-hidden="true" fill="currentColor" width="36" height="30">
+    <svg className={`setting-icon setting-icon--${maskId}`} viewBox="0 0 36 30" aria-hidden="true" fill="currentColor" width="36" height="30" style={{ color: visualStyle.stroke }}>
       {definition.paths.map((path) => <path key={path} d={path} />)}
       {definition.detail ? <path className="setting-icon__detail" d={definition.detail} /> : null}
     </svg>

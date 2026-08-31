@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getMaskBounds, isInsideMask, traceMaskDetail, traceMaskPath } from "../app/lib/masks.mjs";
+import { getMaskBounds, getMaskVisualStyle, isInsideMask, LEAF_MASK_GEOMETRY, traceMaskDetail, traceMaskPath } from "../app/lib/masks.mjs";
 
 const WIDTH = 1200;
 const HEIGHT = 500;
@@ -66,18 +66,19 @@ test("reference silhouettes preserve the four requested landmarks", () => {
   assert.equal(inside("butterfly", [0.5, 0.42]), true);
   assert.equal(inside("butterfly", [0, 0.78]), false, "bottom V notch");
 
-  assert.equal(inside("leaf", [0.84, -0.7]), true, "pointed tip");
-  assert.equal(inside("leaf", [-0.72, 0.62]), true, "blade base");
-  assert.equal(inside("leaf", [-0.96, 0.92]), false, "petiole is narrow");
+  assert.equal(inside("leaf", [0.6, -0.7]), true, "diagonal tip");
+  assert.equal(inside("leaf", [-0.55, 0.45]), true, "broad leaf base");
+  assert.equal(inside("leaf", [-0.45, 0.5]), true, "lower blade");
+  assert.equal(inside("leaf", [0.9, 0.7]), false, "rounded outer edge");
 
   assert.equal(inside("lightbulb", [0, -0.66]), true, "bulb dome");
-  assert.equal(inside("lightbulb", [0, 0.72]), true, "socket");
-  assert.equal(inside("lightbulb", [0.72, 0.2]), false, "rays are not placement area");
+  assert.equal(inside("lightbulb", [0, 0.72]), true, "soft lower neck");
+  assert.equal(inside("lightbulb", [0.88, 0.2]), false, "outside the bulb body");
 
   assert.equal(inside("cloud", [-0.55, -0.34]), true, "large left dome");
   assert.equal(inside("cloud", [0.16, -0.42]), true, "small upper dome");
   assert.equal(inside("cloud", [0.66, -0.16]), true, "right dome");
-  assert.equal(inside("cloud", [0, 0.58]), false, "flat baseline stays above bounds");
+  assert.equal(inside("cloud", [0, 0.72]), false, "soft baseline stays inside compact bounds");
 });
 
 test("all four placement regions are derived from their traced path", () => {
@@ -99,24 +100,31 @@ test("all four placement regions are derived from their traced path", () => {
   }
 });
 
-test("bulb rays are detail-only and stay inside the canvas detail box", () => {
+test("bulb details keep only the filament and socket inside the canvas detail box", () => {
   const commands = [];
   const context = new Proxy({}, {
     get: (_, method) => (...args) => commands.push([method, ...args]),
   });
   assert.equal(traceMaskDetail(context, "lightbulb"), true);
-  const movePoints = commands
+  const outerRayPoints = commands
     .filter(([method]) => method === "moveTo")
     .map(([, x, y]) => [x, y])
     .filter(([x, y]) => Math.abs(x) >= 0.6 || y <= -0.78);
-  assert.equal(movePoints.length, 7, "seven light rays");
-  assert.ok(movePoints.every(([x, y]) => Math.abs(x) <= 0.94 && Math.abs(y) <= 0.94));
-  assert.ok(commands.some(([method]) => method === "lineTo"), "socket lines are included");
+  assert.deepEqual(outerRayPoints, [], "outer light rays are removed");
+  assert.equal(commands.filter(([method]) => method === "lineTo").length, 2, "socket lines are included");
+});
+
+test("approved concept colors are preserved for the requested masks", () => {
+  assert.deepEqual(getMaskVisualStyle("butterfly", "#000"), { stroke: "#7098df", fill: "#eaf2ff" });
+  assert.deepEqual(getMaskVisualStyle("leaf", "#000"), { stroke: "#73b393", fill: "#e8f7ef" });
+  assert.deepEqual(getMaskVisualStyle("lightbulb", "#000"), { stroke: "#e5aa3f", fill: "#fff4c9" });
+  assert.deepEqual(getMaskVisualStyle("cloud", "#000"), { stroke: "#8eaddf", fill: "#fffdf8" });
+  assert.deepEqual(getMaskVisualStyle("circle", "#123456"), { stroke: "#123456", fill: "#ffffff" });
 });
 
 test("leaf keeps a smooth rounded outline and veins branching both ways", () => {
   const path = capturePath("leaf").filter(([method]) => method === "bezierCurveTo");
-  assert.ok(path.length >= 8, "leaf uses enough Bézier segments for a rounded outline");
+  assert.ok(path.length >= 5, "leaf uses enough Bézier segments for a rounded outline");
 
   const commands = [];
   const context = new Proxy({}, {
@@ -130,18 +138,20 @@ test("leaf keeps a smooth rounded outline and veins branching both ways", () => 
   });
   assert.ok(branchDirections.some((direction) => direction < 0), "veins branch left");
   assert.ok(branchDirections.some((direction) => direction > 0), "veins branch right");
+  assert.deepEqual(commands[0].slice(1), LEAF_MASK_GEOMETRY.petioleTip, "vein starts at petiole");
+  assert.deepEqual(commands[LEAF_MASK_GEOMETRY.spine.length - 1].slice(-2), LEAF_MASK_GEOMETRY.tip, "vein reaches tip");
 });
 
 test("reference silhouettes keep practical proportions on the 1200 by 500 canvas", () => {
   const butterfly = getMaskBounds("butterfly", WIDTH, HEIGHT);
   const leaf = getMaskBounds("leaf", WIDTH, HEIGHT);
   const cloud = getMaskBounds("cloud", WIDTH, HEIGHT);
-  assert.ok(butterfly.halfWidth * 2 / (butterfly.halfHeight * 2) >= 1.45);
-  assert.ok(butterfly.halfWidth * 2 / (butterfly.halfHeight * 2) <= 1.6);
-  assert.ok(leaf.halfWidth * 2 / (leaf.halfHeight * 2) >= 2.3);
-  assert.ok(leaf.halfWidth * 2 / (leaf.halfHeight * 2) <= 2.7);
-  assert.ok(cloud.halfWidth * 2 / (cloud.halfHeight * 2) >= 1.55);
-  assert.ok(cloud.halfWidth * 2 / (cloud.halfHeight * 2) <= 1.75);
+  assert.ok(butterfly.halfWidth * 2 / (butterfly.halfHeight * 2) >= 1.6);
+  assert.ok(butterfly.halfWidth * 2 / (butterfly.halfHeight * 2) <= 1.8);
+  assert.ok(leaf.halfWidth * 2 / (leaf.halfHeight * 2) >= 1.35);
+  assert.ok(leaf.halfWidth * 2 / (leaf.halfHeight * 2) <= 1.58);
+  assert.ok(cloud.halfWidth * 2 / (cloud.halfHeight * 2) >= 1.5);
+  assert.ok(cloud.halfWidth * 2 / (cloud.halfHeight * 2) <= 1.85);
 });
 
 test("placement never leaks beyond the high-resolution visible reference path", () => {

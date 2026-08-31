@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { layoutWords } from "../lib/cloud-layout.mjs";
-import { getMaskBounds, traceMaskDetail, traceMaskPath } from "../lib/masks.mjs";
+import { getMaskBounds, getMaskVisualStyle, traceMaskDetail, traceMaskPath } from "../lib/masks.mjs";
 import {
   FONT_OPTIONS,
   PALETTE_OPTIONS,
@@ -197,19 +197,28 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
 
 function drawMaskOutline(context: CanvasRenderingContext2D, maskId: string, color: string) {
   const { halfWidth, halfHeight } = getMaskBounds(maskId, CANVAS_WIDTH, CANVAS_HEIGHT);
+  const visualStyle = getMaskVisualStyle(maskId, color);
   context.save();
-  context.strokeStyle = color;
-  context.globalAlpha = 0.36;
   context.lineWidth = 5;
   context.translate(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
   context.scale(halfWidth, halfHeight);
   context.lineWidth /= Math.max(halfWidth, halfHeight);
   context.beginPath();
   traceMaskPath(context, maskId);
+  context.fillStyle = visualStyle.fill;
+  context.globalAlpha = 0.78;
+  context.fill();
+  context.strokeStyle = visualStyle.stroke;
+  context.globalAlpha = 0.62;
   context.stroke();
   context.beginPath();
   if (traceMaskDetail(context, maskId)) {
-    context.globalAlpha = 0.5;
+    if (maskId === "leaf") {
+      context.lineCap = "round";
+      context.lineJoin = "round";
+    }
+    context.strokeStyle = visualStyle.stroke;
+    context.globalAlpha = 0.72;
     context.stroke();
   }
   context.restore();

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { MASK_IDS, getMaskBounds, isInsideMask, traceMaskDetail, traceMaskPath } from "../app/lib/masks.mjs";
+import { LEAF_MASK_GEOMETRY, MASK_IDS, getMaskBounds, isInsideMask, traceMaskDetail, traceMaskPath } from "../app/lib/masks.mjs";
 import { layoutWords } from "../app/lib/cloud-layout.mjs";
 
 test("all classroom masks include the center and reject far corners", () => {
@@ -16,7 +16,7 @@ test("new classroom masks expose recognizable connected interiors", () => {
   const height = 500;
   const insidePoints = {
     butterfly: [[0, 0], [-0.24, -0.18], [0.24, -0.18], [-0.2, 0.22], [0.2, 0.22]],
-    leaf: [[0, 0], [-0.3, 0], [0.3, 0]],
+    leaf: [[0, 0], [-0.16, 0], [0.16, -0.14]],
     lightbulb: [[0, -0.28], [0, 0], [0, 0.58]],
     cloud: [[0, -0.32], [-0.42, 0], [0.42, 0], [0, 0.3]],
   };
@@ -29,11 +29,11 @@ test("new classroom masks expose recognizable connected interiors", () => {
   }
 });
 
-test("leaf keeps a long diagonal silhouette without losing practical area", () => {
+test("leaf uses a long diagonal blade without losing practical area", () => {
   const { halfWidth, halfHeight } = getMaskBounds("leaf", 1200, 500);
-  assert.ok(halfWidth / halfHeight >= 2.3 && halfWidth / halfHeight <= 2.7, "leaf keeps the requested long diagonal proportion");
+  assert.ok(halfWidth / halfHeight >= 1.35 && halfWidth / halfHeight <= 1.58, "leaf keeps a compact rounded proportion");
   const area = halfWidth * halfHeight;
-  assert.ok(area >= 70000 && area <= 120000, "leaf bounds should preserve practical word area");
+  assert.ok(area >= 75000 && area <= 90000, "leaf bounds should preserve practical word area");
 });
 
 test("layout is deterministic and remains inside the selected mask", () => {
@@ -211,9 +211,9 @@ test("new mask paths are closed and contain sampled internal boundary points", (
   const height = 500;
   const samples = {
     butterfly: [[-0.58, -0.48], [0.58, -0.48], [-0.5, 0.42], [0.5, 0.42]],
-    leaf: [[0, 0], [-0.45, 0], [0.45, 0], [-0.4, 0.6]],
-    lightbulb: [[0, -0.66], [-0.3, 0.72], [0.3, 0.72]],
-    cloud: [[0, -0.6], [-0.8, 0.2], [0.8, 0.2], [0, 0.3]],
+    leaf: [[0.6, -0.7], [-0.45, 0], [0.4, -0.4], [-0.65, 0.3], [-0.45, 0.5]],
+    lightbulb: [[0, -0.66], [-0.16, 0.68], [0.16, 0.68], [0, 0.78]],
+    cloud: [[0, -0.6], [-0.8, 0.2], [0.8, 0.2], [0, 0.3], [0, 0.52]],
   };
 
   for (const [maskId, points] of Object.entries(samples)) {
@@ -266,13 +266,8 @@ test("playful mask paths keep rounded lobes, a tilted leaf, and friendly details
   const leaf = flattenPath(pathCommands("leaf"));
   const topPoint = leaf.reduce((best, point) => (point[1] < best[1] ? point : best));
   const bottomPoint = leaf.reduce((best, point) => (point[1] > best[1] ? point : best));
-  assert.ok(topPoint[0] > 0.1, "leaf tilts up toward the right");
-  assert.ok(bottomPoint[0] < -0.1, "leaf stem side sits down toward the left");
-  const lowerStem = leaf.filter(([, y]) => y >= 0.82);
-  const stemX = lowerStem.map(([x]) => x);
-  assert.ok(lowerStem.length > 0, "leaf has a lower petiole");
-  assert.ok(Math.max(...stemX) - Math.min(...stemX) < 0.2, "leaf petiole stays narrow");
-  assert.ok(Math.max(...stemX) < 0, "leaf petiole stays down-left");
+  assert.ok(topPoint[0] > 0.1, "leaf blade tip points up toward the right");
+  assert.ok(bottomPoint[0] < -0.1, "leaf blade base sits down toward the left");
 
   const detailCommands = (maskId) => {
     const commands = [];
@@ -285,10 +280,13 @@ test("playful mask paths keep rounded lobes, a tilted leaf, and friendly details
   const leafDetails = detailCommands("leaf");
   assert.ok(leafDetails.filter(([method]) => method === "lineTo").length >= 4, "leaf has short branch veins");
   assert.ok(leafDetails.some(([method]) => method === "bezierCurveTo"), "leaf has a curved central vein");
+  assert.deepEqual(leafDetails[0].slice(1), LEAF_MASK_GEOMETRY.petioleTip, "central vein starts at petiole");
+  assert.deepEqual(leafDetails[LEAF_MASK_GEOMETRY.spine.length - 1].slice(-2), LEAF_MASK_GEOMETRY.tip, "central vein reaches leaf tip");
 
   const bulbDetails = detailCommands("lightbulb");
   assert.ok(bulbDetails.filter(([method]) => method === "bezierCurveTo").length >= 2, "bulb has a rounded heart filament");
-  assert.ok(bulbDetails.filter(([method]) => method === "lineTo").length >= 2, "bulb has socket lines");
+  assert.equal(bulbDetails.filter(([method]) => method === "lineTo").length, 2, "bulb has only socket lines");
+  assert.ok(bulbDetails.filter(([method]) => method === "moveTo").every(([, x, y]) => Math.abs(x) < 0.6 && y > -0.78), "bulb has no outer rays");
 
   assert.ok(pathCommands("cloud").filter(([method]) => method === "bezierCurveTo").length >= 6, "cloud has three rounded peaks");
 });
