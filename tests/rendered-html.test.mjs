@@ -38,13 +38,13 @@ test("server-renders the teacher word cloud classroom", async () => {
   ]) {
     assert.match(html, new RegExp(phrase));
   }
-  for (const maskId of ["butterfly", "leaf", "lightbulb", "cloud"]) {
+  for (const maskId of ["circle", "bubble", "heart", "star", "book", "butterfly", "leaf", "lightbulb", "cloud"]) {
     assert.match(
       html,
-      new RegExp(`<svg class="setting-icon setting-icon--${maskId}"[^>]*\\bwidth="36"[^>]*\\bheight="30"`),
+      new RegExp(`<svg class="setting-icon setting-icon--${maskId}"[^>]*viewBox="0 0 36 30"[^>]*\\bwidth="36"[^>]*\\bheight="30"`),
     );
   }
-  assert.match(html, /<button[^>]*title="2026-08-31 — GitHub Pages 하위 경로에서도 앱 자산과 파비콘이 안정적으로 열리도록 정적 배포 경로를 보정/);
+  assert.match(html, /<button[^>]*title="2026-08-31 — 9개 마스크의 선택 아이콘과 워드 배치 외곽선을 동화책 플랫 픽토그램 문법으로 통일/);
   assert.match(html, /setting-icon__detail/);
   assert.doesNotMatch(html, /data-latest-update/);
   for (const starterMarker of [
@@ -84,7 +84,9 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
   assert.match(settings, /다음 색상/);
   assert.match(settings, /ChevronIcon/);
   assert.match(settings, /MaskIcon/);
-  assert.match(settings, /setting-icon--bubble/);
+  assert.match(settings, /MASK_ICON_DEFINITIONS/);
+  assert.doesNotMatch(settings, /glyph/);
+  assert.match(settings, /bubble:\s*\{/);
   assert.match(settings, /화살표를 처음 누르면 첫 색상부터 비교해요/);
   assert.match(settings, /aria-live="polite"/);
   for (const label of ["차분한 보라", "봄빛 파스텔"]) {

@@ -33,32 +33,12 @@ export function isInsideMask(maskId, x, y, width = 2, height = 2) {
 
 function isInsideLocalMask(maskId, localX, localY) {
   if (Math.abs(localX) > 1 || Math.abs(localY) > 1) return false;
-  if (maskId === "circle") return localX * localX + localY * localY <= 0.88;
-  if (maskId === "bubble") {
-    return isInsideRoundedBubble(localX, localY) || isInsideTriangle(localX, localY, [-0.1, 0.62], [0.18, 0.62], [-0.08, 0.84]);
-  }
-  if (maskId === "heart") {
-    const hy = -localY * 1.08 + 0.12;
-    return (localX * localX + hy * hy - 0.68) ** 3 - localX * localX * hy ** 3 <= 0;
-  }
-  if (maskId === "star") {
-    return isInsidePolygon(localX, localY, STAR_POINTS);
-  }
-  if (maskId === "book") {
-    const pageWidth = Math.abs(localX) / 0.92;
-    const top = -0.46 - 0.19 * pageWidth ** 1.6;
-    const bottom = 0.78 - 0.15 * pageWidth ** 1.7;
-    return pageWidth <= 1 && localY >= top && localY <= bottom;
-  }
-  if (maskId === "butterfly" || maskId === "leaf" || maskId === "lightbulb" || maskId === "cloud") {
-    return isInsidePathMask(maskId, localX, localY);
-  }
-  return false;
+  return isInsidePathMask(maskId, localX, localY);
 }
 
 export function traceMaskPath(context, maskId) {
   if (maskId === "circle") {
-    context.arc(0, 0, 0.94, 0, Math.PI * 2);
+    traceCirclePath(context);
   } else if (maskId === "bubble") {
     traceBubblePath(context);
   } else if (maskId === "heart") {
@@ -74,7 +54,7 @@ export function traceMaskPath(context, maskId) {
   } else if (maskId === "book") {
     traceBookPath(context);
   } else {
-    tracePolygonPath(context, STAR_POINTS);
+    traceStarPath(context);
   }
   context.closePath();
 }
@@ -93,24 +73,20 @@ export function traceMaskDetail(context, maskId) {
     return true;
   }
   if (maskId === "leaf") {
-    context.moveTo(-0.82, 0.76);
-    context.bezierCurveTo(-0.42, 0.28, 0.16, -0.38, 0.88, -0.82);
-    context.moveTo(-0.5, 0.42);
-    context.lineTo(-0.78, 0.18);
-    context.moveTo(-0.25, 0.2);
-    context.lineTo(-0.55, -0.04);
-    context.moveTo(0.02, -0.02);
-    context.lineTo(-0.27, -0.25);
-    context.moveTo(0.27, -0.25);
-    context.lineTo(0.02, -0.47);
-    context.moveTo(-0.42, 0.48);
-    context.lineTo(-0.16, 0.24);
-    context.moveTo(-0.14, 0.25);
-    context.lineTo(0.1, 0.01);
-    context.moveTo(0.14, 0.01);
-    context.lineTo(0.36, -0.22);
-    context.moveTo(0.39, -0.23);
-    context.lineTo(0.58, -0.48);
+    context.moveTo(-0.42, 0.9);
+    context.bezierCurveTo(-0.18, 0.48, 0.28, -0.1, 0.82, -0.74);
+    context.moveTo(-0.22, 0.54);
+    context.lineTo(-0.55, 0.37);
+    context.moveTo(0.02, 0.25);
+    context.lineTo(-0.3, 0.08);
+    context.moveTo(0.27, -0.05);
+    context.lineTo(-0.02, -0.25);
+    context.moveTo(0.5, -0.35);
+    context.lineTo(0.27, -0.53);
+    context.moveTo(0.02, 0.25);
+    context.lineTo(0.28, 0.1);
+    context.moveTo(0.27, -0.05);
+    context.lineTo(0.5, -0.22);
     return true;
   }
   if (maskId === "lightbulb") {
@@ -226,21 +202,14 @@ function flattenMaskPath(commands, steps = 12) {
   return points;
 }
 
-function isInsideTriangle(x, y, [ax, ay], [bx, by], [cx, cy]) {
-  const denominator = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy);
-  const first = ((by - cy) * (x - cx) + (cx - bx) * (y - cy)) / denominator;
-  const second = ((cy - ay) * (x - cx) + (ax - cx) * (y - cy)) / denominator;
-  const third = 1 - first - second;
-  return first >= 0 && second >= 0 && third >= 0;
-}
-
-function isInsideRoundedBubble(x, y) {
-  const cornerRadius = 0.23;
-  const innerX = 0.73;
-  const innerY = 0.39;
-  const distanceX = Math.max(Math.abs(x) - innerX, 0);
-  const distanceY = Math.max(Math.abs(y) - innerY, 0);
-  return distanceX * distanceX + distanceY * distanceY <= cornerRadius * cornerRadius;
+function traceCirclePath(context) {
+  const radius = 0.94;
+  const control = radius * 0.55228475;
+  context.moveTo(0, -radius);
+  context.bezierCurveTo(control, -radius, radius, -control, radius, 0);
+  context.bezierCurveTo(radius, control, control, radius, 0, radius);
+  context.bezierCurveTo(-control, radius, -radius, control, -radius, 0);
+  context.bezierCurveTo(-radius, -control, -control, -radius, 0, -radius);
 }
 
 function traceBubblePath(context) {
@@ -255,7 +224,6 @@ function traceBubblePath(context) {
   context.bezierCurveTo(0.87, 0.62, 0.96, 0.44, 0.96, 0.2);
   context.lineTo(0.96, -0.22);
   context.bezierCurveTo(0.96, -0.45, 0.9, -0.62, 0.73, -0.62);
-  context.closePath();
 }
 
 function traceHeartPath(context) {
@@ -267,74 +235,58 @@ function traceHeartPath(context) {
 }
 
 function traceButterflyPath(context) {
-  context.moveTo(0, -0.16);
-  context.bezierCurveTo(-0.14, -0.48, -0.5, -0.94, -0.78, -0.9);
-  context.bezierCurveTo(-0.98, -0.87, -1, -0.64, -0.94, -0.46);
-  context.bezierCurveTo(-0.91, -0.32, -0.8, -0.25, -0.66, -0.16);
-  context.bezierCurveTo(-0.85, -0.08, -0.97, 0.08, -0.96, 0.27);
-  context.bezierCurveTo(-0.87, 0.5, -0.68, 0.68, -0.47, 0.69);
-  context.bezierCurveTo(-0.25, 0.7, -0.12, 0.54, 0, 0.34);
-  context.bezierCurveTo(0.12, 0.54, 0.25, 0.7, 0.47, 0.69);
-  context.bezierCurveTo(0.68, 0.68, 0.87, 0.5, 0.96, 0.27);
-  context.bezierCurveTo(0.97, 0.08, 0.85, -0.08, 0.66, -0.16);
-  context.bezierCurveTo(0.8, -0.25, 0.91, -0.32, 0.94, -0.46);
-  context.bezierCurveTo(1, -0.64, 0.98, -0.87, 0.78, -0.9);
-  context.bezierCurveTo(0.5, -0.94, 0.14, -0.48, 0, -0.16);
+  context.moveTo(0, -0.14);
+  context.bezierCurveTo(-0.18, -0.42, -0.48, -0.8, -0.76, -0.78);
+  context.bezierCurveTo(-0.94, -0.76, -0.94, -0.53, -0.82, -0.34);
+  context.bezierCurveTo(-0.75, -0.23, -0.64, -0.14, -0.5, -0.06);
+  context.bezierCurveTo(-0.72, -0.03, -0.91, 0.1, -0.92, 0.3);
+  context.bezierCurveTo(-0.92, 0.53, -0.7, 0.72, -0.48, 0.68);
+  context.bezierCurveTo(-0.26, 0.65, -0.12, 0.46, 0, 0.28);
+  context.bezierCurveTo(0.12, 0.46, 0.26, 0.65, 0.48, 0.68);
+  context.bezierCurveTo(0.7, 0.72, 0.92, 0.53, 0.92, 0.3);
+  context.bezierCurveTo(0.91, 0.1, 0.72, -0.03, 0.5, -0.06);
+  context.bezierCurveTo(0.64, -0.14, 0.75, -0.23, 0.82, -0.34);
+  context.bezierCurveTo(0.94, -0.53, 0.94, -0.76, 0.76, -0.78);
+  context.bezierCurveTo(0.48, -0.8, 0.18, -0.42, 0, -0.14);
 }
 
 function traceLeafPath(context) {
-  context.moveTo(0.9, -0.88);
-  context.bezierCurveTo(0.66, -0.84, 0.49, -0.78, 0.34, -0.71);
-  context.bezierCurveTo(0.26, -0.79, 0.18, -0.82, 0.1, -0.78);
-  context.bezierCurveTo(0.03, -0.75, 0, -0.69, -0.02, -0.62);
-  context.bezierCurveTo(-0.11, -0.68, -0.2, -0.7, -0.27, -0.64);
-  context.bezierCurveTo(-0.34, -0.59, -0.36, -0.52, -0.37, -0.44);
-  context.bezierCurveTo(-0.46, -0.49, -0.55, -0.49, -0.61, -0.43);
-  context.bezierCurveTo(-0.67, -0.36, -0.68, -0.29, -0.68, -0.21);
-  context.bezierCurveTo(-0.77, -0.25, -0.85, -0.22, -0.89, -0.14);
-  context.bezierCurveTo(-0.93, -0.05, -0.9, 0.03, -0.86, 0.1);
-  context.bezierCurveTo(-0.93, 0.12, -0.98, 0.19, -0.96, 0.27);
-  context.bezierCurveTo(-0.94, 0.37, -0.85, 0.43, -0.75, 0.45);
-  context.bezierCurveTo(-0.82, 0.52, -0.84, 0.61, -0.79, 0.68);
-  context.bezierCurveTo(-0.72, 0.78, -0.6, 0.78, -0.5, 0.73);
-  context.bezierCurveTo(-0.47, 0.83, -0.47, 0.92, -0.5, 0.99);
-  context.bezierCurveTo(-0.47, 1, -0.42, 1, -0.39, 0.98);
-  context.bezierCurveTo(-0.37, 0.9, -0.38, 0.82, -0.4, 0.73);
-  context.bezierCurveTo(-0.28, 0.77, -0.15, 0.74, -0.05, 0.68);
-  context.bezierCurveTo(0.02, 0.63, 0.08, 0.56, 0.14, 0.5);
-  context.bezierCurveTo(0.08, 0.48, 0.1, 0.42, 0.2, 0.36);
-  context.bezierCurveTo(0.26, 0.33, 0.31, 0.26, 0.28, 0.2);
-  context.bezierCurveTo(0.36, 0.2, 0.41, 0.12, 0.39, 0.03);
-  context.bezierCurveTo(0.48, 0.1, 0.55, 0.04, 0.52, -0.03);
-  context.bezierCurveTo(0.62, -0.17, 0.67, -0.26, 0.65, -0.34);
-  context.bezierCurveTo(0.74, -0.38, 0.79, -0.48, 0.76, -0.56);
-  context.bezierCurveTo(0.84, -0.62, 0.88, -0.75, 0.9, -0.88);
+  context.moveTo(0.88, -0.84);
+  context.bezierCurveTo(0.5, -0.8, 0.1, -0.64, -0.22, -0.42);
+  context.bezierCurveTo(-0.52, -0.22, -0.76, 0.02, -0.84, 0.3);
+  context.bezierCurveTo(-0.9, 0.5, -0.82, 0.68, -0.58, 0.76);
+  context.bezierCurveTo(-0.53, 0.79, -0.48, 0.86, -0.49, 0.98);
+  context.bezierCurveTo(-0.45, 1.02, -0.37, 1.01, -0.34, 0.97);
+  context.bezierCurveTo(-0.34, 0.87, -0.38, 0.8, -0.34, 0.73);
+  context.bezierCurveTo(-0.08, 0.7, 0.18, 0.55, 0.4, 0.34);
+  context.bezierCurveTo(0.62, 0.13, 0.8, -0.16, 0.86, -0.48);
+  context.bezierCurveTo(0.9, -0.66, 0.9, -0.79, 0.88, -0.84);
 }
 
 function traceLightbulbPath(context) {
   context.moveTo(0, -0.86);
-  context.bezierCurveTo(-0.47, -0.86, -0.76, -0.57, -0.76, -0.2);
-  context.bezierCurveTo(-0.76, 0.08, -0.63, 0.25, -0.46, 0.4);
-  context.bezierCurveTo(-0.37, 0.48, -0.34, 0.56, -0.33, 0.64);
-  context.lineTo(-0.33, 0.82);
-  context.bezierCurveTo(-0.33, 0.89, -0.26, 0.92, -0.18, 0.92);
-  context.lineTo(0.18, 0.92);
-  context.bezierCurveTo(0.26, 0.92, 0.33, 0.89, 0.33, 0.82);
-  context.lineTo(0.33, 0.64);
-  context.bezierCurveTo(0.34, 0.56, 0.37, 0.48, 0.46, 0.4);
-  context.bezierCurveTo(0.63, 0.25, 0.76, 0.08, 0.76, -0.2);
-  context.bezierCurveTo(0.76, -0.57, 0.47, -0.86, 0, -0.86);
+  context.bezierCurveTo(-0.48, -0.86, -0.78, -0.56, -0.78, -0.18);
+  context.bezierCurveTo(-0.78, 0.1, -0.63, 0.3, -0.45, 0.46);
+  context.bezierCurveTo(-0.35, 0.55, -0.39, 0.64, -0.38, 0.72);
+  context.lineTo(-0.38, 0.84);
+  context.bezierCurveTo(-0.38, 0.9, -0.27, 0.93, -0.16, 0.93);
+  context.lineTo(0.16, 0.93);
+  context.bezierCurveTo(0.27, 0.93, 0.38, 0.9, 0.38, 0.84);
+  context.lineTo(0.38, 0.72);
+  context.bezierCurveTo(0.39, 0.64, 0.35, 0.55, 0.45, 0.46);
+  context.bezierCurveTo(0.63, 0.3, 0.78, 0.1, 0.78, -0.18);
+  context.bezierCurveTo(0.78, -0.56, 0.48, -0.86, 0, -0.86);
 }
 
 function traceCloudPath(context) {
-  context.moveTo(-0.92, 0.44);
-  context.bezierCurveTo(-0.99, 0.28, -0.98, 0.06, -0.86, -0.04);
-  context.bezierCurveTo(-0.84, -0.31, -0.66, -0.52, -0.43, -0.49);
-  context.bezierCurveTo(-0.26, -0.79, 0.12, -0.79, 0.27, -0.47);
-  context.bezierCurveTo(0.39, -0.61, 0.62, -0.58, 0.7, -0.34);
-  context.bezierCurveTo(0.94, -0.35, 1, -0.08, 0.91, 0.1);
-  context.bezierCurveTo(1, 0.2, 0.98, 0.36, 0.88, 0.44);
-  context.lineTo(-0.92, 0.44);
+  context.moveTo(-0.9, 0.42);
+  context.bezierCurveTo(-0.98, 0.3, -0.97, 0.08, -0.82, -0.02);
+  context.bezierCurveTo(-0.8, -0.29, -0.62, -0.5, -0.4, -0.47);
+  context.bezierCurveTo(-0.2, -0.74, 0.12, -0.74, 0.29, -0.44);
+  context.bezierCurveTo(0.42, -0.58, 0.64, -0.54, 0.74, -0.28);
+  context.bezierCurveTo(0.92, -0.29, 1, -0.09, 0.91, 0.08);
+  context.bezierCurveTo(1, 0.18, 0.98, 0.34, 0.84, 0.42);
+  context.bezierCurveTo(0.6, 0.56, -0.62, 0.56, -0.9, 0.42);
 }
 
 function traceBookPath(context) {
@@ -346,22 +298,16 @@ function traceBookPath(context) {
   context.bezierCurveTo(-0.24, 0.57, -0.59, 0.52, -0.92, 0.63);
 }
 
-function tracePolygonPath(context, points) {
-  for (const [x, y] of points) {
-    if (x === points[0][0] && y === points[0][1]) context.moveTo(x, y);
-    else context.lineTo(x, y);
-  }
+function traceStarPath(context) {
+  const incoming = STAR_POINTS.map((point, index) => pointAlong(point, STAR_POINTS[(index + STAR_POINTS.length - 1) % STAR_POINTS.length], index % 2 === 0 ? 0.13 : 0.1));
+  const outgoing = STAR_POINTS.map((point, index) => pointAlong(point, STAR_POINTS[(index + 1) % STAR_POINTS.length], index % 2 === 0 ? 0.13 : 0.1));
+  context.moveTo(...outgoing.at(-1));
+  STAR_POINTS.forEach((point, index) => {
+    context.lineTo(...incoming[index]);
+    context.bezierCurveTo(point[0], point[1], point[0], point[1], ...outgoing[index]);
+  });
 }
 
-function isInsidePolygon(x, y, points) {
-  let inside = false;
-
-  for (let index = 0, previous = points.length - 1; index < points.length; previous = index, index += 1) {
-    const [currentX, currentY] = points[index];
-    const [previousX, previousY] = points[previous];
-    const crossesRay = (currentY > y) !== (previousY > y)
-      && x < ((previousX - currentX) * (y - currentY)) / (previousY - currentY) + currentX;
-    if (crossesRay) inside = !inside;
-  }
-  return inside;
+function pointAlong([startX, startY], [endX, endY], amount) {
+  return [startX + (endX - startX) * amount, startY + (endY - startY) * amount];
 }

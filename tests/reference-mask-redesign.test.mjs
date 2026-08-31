@@ -82,7 +82,7 @@ test("reference silhouettes preserve the four requested landmarks", () => {
 
 test("all four placement regions are derived from their traced path", () => {
   for (const maskId of ["butterfly", "leaf", "lightbulb", "cloud"]) {
-    const polygon = flattenPath(capturePath(maskId), maskId === "leaf" ? 64 : 24);
+    const polygon = flattenPath(capturePath(maskId), 128);
     assert.ok(polygon.length > 20, `${maskId} has a detailed path`);
     assert.ok(capturePath(maskId).some(([method]) => method === "closePath"), `${maskId} closes`);
     for (let xIndex = -20; xIndex <= 20; xIndex += 1) {
@@ -114,13 +114,9 @@ test("bulb rays are detail-only and stay inside the canvas detail box", () => {
   assert.ok(commands.some(([method]) => method === "lineTo"), "socket lines are included");
 });
 
-test("leaf has serrations on both edges and veins branching both ways", () => {
+test("leaf keeps a smooth rounded outline and veins branching both ways", () => {
   const path = capturePath("leaf").filter(([method]) => method === "bezierCurveTo");
-  const endpoints = path.map(([, , , , , endX]) => endX);
-  const descending = endpoints.filter((endX, index) => endX < (index ? endpoints[index - 1] : 0.9));
-  const ascending = endpoints.filter((endX, index) => endX > (index ? endpoints[index - 1] : -0.5));
-  assert.ok(descending.length >= 5, "one edge has at least five soft teeth");
-  assert.ok(ascending.length >= 5, "the opposite edge has at least five soft teeth");
+  assert.ok(path.length >= 8, "leaf uses enough Bézier segments for a rounded outline");
 
   const commands = [];
   const context = new Proxy({}, {
