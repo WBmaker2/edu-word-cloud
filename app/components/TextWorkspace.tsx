@@ -16,6 +16,7 @@ type TextWorkspaceProps = {
   keywords: string[];
   error: string | null;
   truncated: boolean;
+  hasResult: boolean;
   onTextChange: (value: string) => void;
   onExcludedChange: (value: string) => void;
   onKeywordsChange: (value: string) => void;
@@ -28,6 +29,7 @@ export function TextWorkspace({
   keywords,
   error,
   truncated,
+  hasResult,
   onTextChange,
   onExcludedChange,
   onKeywordsChange,
@@ -40,14 +42,16 @@ export function TextWorkspace({
           <h2 id="workspace-title">학생 답변 붙여넣기</h2>
           <p>입력한 글은 이 기기에서만 분석되고 새로고침하면 사라집니다.</p>
         </div>
-        <span className="character-count" aria-label={`입력 글자 수 ${text.length}자`}>예시 문장 사용</span>
+        <span className="character-count" aria-label={`입력 글자 수 ${text.length}자`}>
+          {text.length ? `${text.length}자 입력됨` : "아직 입력 없음"}
+        </span>
       </div>
-      <label className="input-instruction" htmlFor="student-text">학생들의 답변을 한 줄에 하나씩 붙여넣기 해주세요. (엔터로 구분)</label>
+      <label className="input-instruction" htmlFor="student-text">학생 답변을 붙여넣어요. 여러 답변은 줄바꿈으로 나누면 보기 좋아요.</label>
       <textarea
         id="student-text"
         value={text}
         onChange={(event) => onTextChange(event.target.value)}
-        placeholder="학생들의 답변을 붙여넣어 주세요."
+        placeholder="학생 답변을 붙여넣어 주세요."
         rows={6}
       />
       <details className="text-workspace__details">
@@ -85,7 +89,9 @@ export function TextWorkspace({
           <ExampleButton label="고등학생" value={EXAMPLES.high} onSelect={onTextChange} />
           <ExampleButton label="교과 활동" value={EXAMPLES.activity} onSelect={onTextChange} />
         </div>
-        <button type="button" className="primary-action" onClick={onGenerate}>워드 클라우드 만들기</button>
+        <button type="button" className="primary-action gi-pulse" onClick={onGenerate}>
+          {hasResult ? "다시 만들기" : "워드 클라우드 만들기"}
+        </button>
       </div>
     </section>
   );

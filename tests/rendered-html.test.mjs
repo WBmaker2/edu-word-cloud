@@ -27,7 +27,7 @@ test("server-renders the teacher word cloud classroom", async () => {
     "학생 생각을 한눈에, 수업을 더 풍성하게",
     "광고 없음",
     "서버 저장 없음",
-    "워드 클라우드 만들기",
+    "다시 만들기",
     "업데이트 내역",
     "마스크: 나비",
     "마스크: 나뭇잎",
@@ -44,7 +44,7 @@ test("server-renders the teacher word cloud classroom", async () => {
       new RegExp(`<svg class="setting-icon setting-icon--${maskId}"[^>]*\\bwidth="36"[^>]*\\bheight="30"`),
     );
   }
-  assert.match(html, /<button[^>]*title="2026-08-26 — 첨부 이미지 기준으로 나비·나뭇잎·전구·구름 마스크의 외곽선과 아이콘을 다시 그리고, 단어 배치 영역을 외곽 경로와 일치시킴"/);
+  assert.match(html, /<button[^>]*title="2026-08-31 — 입력 변경을 다시 만들기 전까지 보류하고, 단어표 펼침·가독성 안내·PNG 요약을 개선"/);
   assert.match(html, /setting-icon__detail/);
   assert.doesNotMatch(html, /data-latest-update/);
   for (const starterMarker of [
@@ -91,11 +91,14 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
     assert.match(options, new RegExp(`label: "${label}"`));
   }
   assert.match(studio, /aria-live="polite"/);
+  assert.match(studio, /입력이 바뀌었어요\.<\/strong> 다시 만들기를 눌러 반영하세요\./);
+  assert.match(studio, /createInputSignature/);
   assert.match(dialog, /<dialog ref=\{dialogRef\}/);
   for (const example of ["초등 저학년", "초등 고학년", "중학생", "고등학생", "교과 활동"]) {
     assert.match(workspace, new RegExp(example));
   }
   assert.match(dialog, /2026-08-26 — 첨부 이미지 기준으로 나비·나뭇잎·전구·구름 마스크의 외곽선과 아이콘을 다시 그리고, 단어 배치 영역을 외곽 경로와 일치시킴/);
+  assert.match(dialog, /2026-08-31 — 입력 변경을 다시 만들기 전까지 보류하고, 단어표 펼침·가독성 안내·PNG 요약을 개선/);
   assert.match(dialog, /2026-08-25 — 초등학생이 좋아할 만한 무료 한글 글꼴 '동글동글 주아'와 '또박또박 고운돋움' 2종을 추가/);
   assert.match(dialog, /2026-07-23 — 선택한 마스크 안에 단어가 배치되도록/);
   assert.match(dialog, /현재 색상 이름과 첫 화살표의 비교 순서를 보여 주고/);
@@ -114,6 +117,8 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
     );
   }
   assert.match(frequency, /<table/);
+  assert.match(frequency, /aria-expanded=\{isExpanded\}/);
+  assert.match(frequency, /전체 단어 보기/);
   assert.match(layout, /lang="ko"/);
   assert.match(page, /<WordCloudStudio \/>/);
   await assert.rejects(access(new URL("_sites-preview", appRoot)));
@@ -127,6 +132,8 @@ test("keeps the approved controls, accessibility signals, and privacy boundary i
   assert.match(studio, /openerRef\.current = opener/);
   assert.match(studio, /requestAnimationFrame\(\(\) => openerRef\.current\?\.focus\(\)\)/);
   assert.match(styles, /\.info-dialog__close\s*\{[^}]*min-height:\s*44px/s);
+  assert.match(styles, /\.gi-pulse/);
+  assert.match(styles, /prefers-reduced-motion/);
   assert.match(styles, /\.setting-group:nth-of-type\(odd\)/);
   assert.match(studio, /truncated=\{text\.length > MAX_TEXT_LENGTH\}/);
 });

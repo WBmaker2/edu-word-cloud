@@ -36,21 +36,6 @@ type CloudCanvasProps = {
 
 type PlacedWord = ReturnType<typeof layoutWords>["placed"][number];
 
-const EXAMPLE_WORDS = [
-  { text: "우리", x: 600, y: 315, size: 92, colorIndex: 0 },
-  { text: "배움", x: 750, y: 242, size: 39, colorIndex: 1 },
-  { text: "용기", x: 445, y: 250, size: 34, colorIndex: 2 },
-  { text: "친구", x: 900, y: 340, size: 36, colorIndex: 3 },
-  { text: "수업", x: 405, y: 435, size: 68, colorIndex: 1 },
-  { text: "생각", x: 770, y: 425, size: 64, colorIndex: 2 },
-  { text: "질문", x: 530, y: 505, size: 34, colorIndex: 4 },
-  { text: "협력", x: 685, y: 535, size: 38, colorIndex: 1 },
-  { text: "함께", x: 570, y: 555, size: 54, colorIndex: 3 },
-  { text: "성장", x: 845, y: 565, size: 48, colorIndex: 4 },
-  { text: "존중", x: 380, y: 580, size: 35, colorIndex: 0 },
-  { text: "실천", x: 930, y: 470, size: 31, colorIndex: 2 },
-] as const;
-
 export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const palette = useMemo(
@@ -94,10 +79,7 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
       context.textBaseline = "middle";
       drawMaskOutline(context, settings.maskId, palette.colors[0]);
 
-      if (!layout) {
-        drawExampleCloud(context, font.family, font.weight, palette.colors);
-        return;
-      }
+      if (!layout) return;
 
       for (const word of layout.placed) {
         drawWord(context, word, font.family, font.weight, palette.colors);
@@ -109,6 +91,16 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
       cancelled = true;
     };
   }, [font, layout, palette, settings.maskId, settings.wordCount]);
+
+  const placedCount = layout?.placed.length ?? 0;
+  const omittedCount = layout?.omitted.length ?? 0;
+  const canDownload = Boolean(result && placedCount);
+  const summary = omittedCount
+    ? `표시된 단어 ${placedCount}개 · 공간이 부족해 ${omittedCount}개는 숨겼어요.`
+    : `표시된 단어 ${placedCount}개 · 요청한 단어를 모두 넣었어요.`;
+  const countHint = settings.wordCount >= 60
+    ? "많이 표시하면 글자가 작아질 수 있어요. 20~40개가 읽기 좋아요."
+    : "수업 화면에서는 20~40개가 읽기 좋아요.";
 
   function handleDownload() {
     const canvas = canvasRef.current;
@@ -177,22 +169,28 @@ export function CloudCanvas({ result, settings, onDownloadError }: CloudCanvasPr
         aria-describedby={result ? "cloud-summary" : "cloud-empty-message"}
         style={{ display: "block", width: "100%", height: "auto", aspectRatio: "12 / 5" }}
       />
+      {!result ? <p className="cloud-canvas__empty">입력 내용을 만들면 여기에 결과가 나타나요.</p> : null}
       <div className="cloud-canvas__footer">
-        {result ? (
-          <p id="cloud-summary">표시된 단어 {layout?.placed.length ?? 0}개 · 모두 마스크 안에 배치했어요.</p>
-        ) : (
-          <p id="cloud-empty-message">텍스트를 붙여넣으면 여기에 결과가 나타나요.</p>
-        )}
+        <div className="cloud-canvas__summary">
+          {result ? (
+            <>
+              <p id="cloud-summary">{summary}</p>
+              <p className="cloud-canvas__hint">{countHint}</p>
+            </>
+          ) : (
+            <p id="cloud-empty-message">텍스트를 넣고 ‘워드 클라우드 만들기’를 눌러 보세요.</p>
+          )}
+        </div>
         <button
           type="button"
+          className={canDownload ? "download-action gi-pulse" : "download-action"}
           onClick={handleDownload}
-          disabled={!result || !layout?.placed.length}
+          disabled={!canDownload}
           title={result ? undefined : "단어를 만든 뒤 PNG로 저장할 수 있어요."}
         >
           PNG 저장
         </button>
       </div>
-      {!result ? <p className="download-note">단어를 만든 뒤 PNG로 저장할 수 있어요.</p> : null}
     </section>
   );
 }
@@ -215,19 +213,6 @@ function drawMaskOutline(context: CanvasRenderingContext2D, maskId: string, colo
     context.stroke();
   }
   context.restore();
-}
-
-function drawExampleCloud(
-  context: CanvasRenderingContext2D,
-  family: string,
-  weight: number,
-  colors: readonly string[],
-) {
-  for (const word of EXAMPLE_WORDS) {
-    context.fillStyle = colors[word.colorIndex % colors.length];
-    context.font = `${weight} ${word.size}px ${family}`;
-    context.fillText(word.text, word.x, word.y);
-  }
 }
 
 function drawWord(

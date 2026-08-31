@@ -158,7 +158,7 @@ function SettingGroup({
   const selectedLabel = choices.find((choice) => choice.id === selected)?.label ?? "";
 
   return (
-    <fieldset className="setting-group">
+    <fieldset className={`setting-group setting-group--${kind}`}>
       <legend>{label}</legend>
       <div className={`setting-options setting-options--${kind}`}>
         {choices.map((choice) => {
@@ -188,7 +188,13 @@ function SettingGroup({
           );
         })}
       </div>
-      <p className="setting-description">현재 선택: {selectedLabel}</p>
+      <p className={kind === "count" ? "setting-description setting-description--count" : "setting-description"}>
+        {kind === "count"
+          ? Number(selected) >= 60
+            ? "많이 표시하면 글자가 작아질 수 있어요."
+            : "20~40개가 수업 화면에서 읽기 좋아요."
+          : `현재 선택: ${selectedLabel}`}
+      </p>
     </fieldset>
   );
 }

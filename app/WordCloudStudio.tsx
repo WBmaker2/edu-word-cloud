@@ -15,8 +15,8 @@ type CloudResult = { words: CloudWord[] };
 type DialogType = "help" | "updates" | null;
 
 const ERROR_MESSAGES = {
-  empty: "먼저 학생 답변이나 수업 내용을 붙여넣어 주세요.",
-  insufficient: "두 글자 이상의 단어를 조금 더 입력해 주세요.",
+  empty: "학생 답변이나 수업 내용을 붙여넣어 주세요.",
+  insufficient: "두 글자 이상인 단어를 넣어 주세요.",
 } as const;
 
 const INITIAL_ANALYSIS = analyzeText({
@@ -26,6 +26,10 @@ const INITIAL_ANALYSIS = analyzeText({
   limit: 100,
 });
 
+function createInputSignature(text: string, excluded: string, keywords: string[]) {
+  return JSON.stringify([text, parseList(excluded), keywords]);
+}
+
 export function WordCloudStudio() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [text, setText] = useState(DEFAULT_SAMPLE_TEXT);
@@ -33,6 +37,9 @@ export function WordCloudStudio() {
   const [keywords, setKeywords] = useState<string[]>([]);
   const [result, setResult] = useState<CloudResult | null>(() => (
     INITIAL_ANALYSIS.error ? null : { words: INITIAL_ANALYSIS.words }
+  ));
+  const [lastGeneratedSignature, setLastGeneratedSignature] = useState(() => (
+    createInputSignature(DEFAULT_SAMPLE_TEXT, "", [])
   ));
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [workspaceError, setWorkspaceError] = useState<string | null>(null);
@@ -70,6 +77,11 @@ export function WordCloudStudio() {
     }
   }, [preferencesLoaded, settings]);
 
+  const currentInputSignature = useMemo(
+    () => createInputSignature(text, excluded, keywords),
+    [excluded, keywords, text],
+  );
+
   const generate = useCallback(() => {
     const analysis = analyzeText({
       text,
@@ -87,13 +99,13 @@ export function WordCloudStudio() {
     setWorkspaceError(null);
     setPreviewError(null);
     setResult({ words: analysis.words });
+    setLastGeneratedSignature(currentInputSignature);
     setStatusMessage(`워드 클라우드를 만들었어요. ${analysis.words.length}개의 단어를 찾았어요.`);
-  }, [excluded, keywords, text]);
+  }, [currentInputSignature, excluded, keywords, text]);
 
   const changeSettings = useCallback((nextSettings: Settings) => {
     setSettings(nextSettings);
-    if (result) generate();
-  }, [generate, result]);
+  }, []);
 
   const changeKeywords = useCallback((value: string) => {
     const nextKeywords = parseList(value);
@@ -104,16 +116,27 @@ export function WordCloudStudio() {
       return;
     }
     setKeywords(nextKeywords);
+    setStatusMessage(null);
     if (workspaceError === "핵심어는 최대 3개까지 입력할 수 있어요.") {
       setWorkspaceError(null);
-      setStatusMessage(null);
     }
   }, [workspaceError]);
+
+  const handleTextChange = useCallback((value: string) => {
+    setText(value);
+    setStatusMessage(null);
+  }, []);
+
+  const handleExcludedChange = useCallback((value: string) => {
+    setExcluded(value);
+    setStatusMessage(null);
+  }, []);
 
   const displayedWords = useMemo(
     () => result?.words.slice(0, settings.wordCount) ?? [],
     [result, settings.wordCount],
   );
+  const hasUnappliedChanges = Boolean(result) && currentInputSignature !== lastGeneratedSignature;
 
   const openDialog = useCallback((type: Exclude<DialogType, null>, opener: HTMLButtonElement) => {
     openerRef.current = opener;
@@ -158,12 +181,15 @@ export function WordCloudStudio() {
 
       <p className="sr-only" aria-live="polite">{statusMessage ?? ""}</p>
       <section className="preview-panel" aria-labelledby="preview-title">
-        <div className="section-heading">
+        <div className="section-heading preview-panel__heading">
           <div>
             <h2 id="preview-title">수업 워드 클라우드</h2>
-            <p>{result ? "설정을 바꾸면 결과가 바로 달라져요." : "예시를 보거나 학생 답변을 붙여넣어 시작해 보세요."}</p>
+            <p>{result ? "마스크·색상·글꼴을 바꾸면 미리보기도 바뀌어요." : "학생 답변을 넣고 워드 클라우드를 만들어 보세요."}</p>
           </div>
         </div>
+        {hasUnappliedChanges ? (
+          <p className="pending-change" role="status"><strong>입력이 바뀌었어요.</strong> 다시 만들기를 눌러 반영하세요.</p>
+        ) : null}
         <CloudCanvas result={result} settings={settings} onDownloadError={reportDownloadError} />
         {previewError ? <p className="preview-error" role="alert"><strong>{previewError}</strong> 저장 버튼을 다시 눌러 주세요.</p> : null}
       </section>
@@ -176,8 +202,9 @@ export function WordCloudStudio() {
           keywords={keywords}
           error={workspaceError}
           truncated={text.length > MAX_TEXT_LENGTH}
-          onTextChange={setText}
-          onExcludedChange={setExcluded}
+          hasResult={Boolean(result)}
+          onTextChange={handleTextChange}
+          onExcludedChange={handleExcludedChange}
           onKeywordsChange={changeKeywords}
           onGenerate={generate}
         />
